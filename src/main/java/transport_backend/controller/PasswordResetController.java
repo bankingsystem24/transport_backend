@@ -1,6 +1,10 @@
 package transport_backend.controller;
 
+import transport_backend.entity.User;
+import transport_backend.repository.UserRepository;
 import transport_backend.service.PasswordResetService;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,27 +13,31 @@ import org.springframework.web.bind.annotation.*;
 public class PasswordResetController {
 
     private final PasswordResetService passwordResetService;
-    // private final UserRepository userRepository;
+    private final UserRepository userRepository;
 
     public PasswordResetController(
-            PasswordResetService passwordResetService
-            // UserRepository userRepository
+            PasswordResetService passwordResetService,
+            UserRepository userRepository
             ) {
 
         this.passwordResetService = passwordResetService;
-        // this.userRepository = userRepository;
+        this.userRepository = userRepository;
     }
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(
             @RequestBody ForgotPasswordRequest request) {
 
-                System.out.println("========== FORGOT PASSWORD CONTROLLER ==========");
-    System.out.println("Email: " + request.getEmail());
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElse(null);
 
-        // User user = userRepository.findByEmail(request.email)
-        //     .orElseThrow(() ->
-        //             new RuntimeException("User not found"));
+
+    if (user == null) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new MessageResponse("User Not Found"));
+    }
+
 
         passwordResetService.sendOtp(request.getEmail());
 
