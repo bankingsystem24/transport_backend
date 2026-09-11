@@ -140,7 +140,8 @@ public class SecurityConfig {
                                 "/api/auth/login",
                                 "/api/auth/forgot-password",
                                 "/api/auth/verify-otp",
-                                "/api/auth/reset-password"
+                                "/api/auth/reset-password",
+                                "/api/company-master"
                         ).permitAll()
 
                         // Allow browser preflight request
