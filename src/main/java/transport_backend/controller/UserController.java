@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
+import transport_backend.dto.ChangePasswordRequest;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/users")
@@ -133,6 +135,75 @@ public class UserController {
                             "User deactivated successfully");
                 })
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
+
+        if (request.getCurrentPassword() == null
+                || request.getCurrentPassword().isBlank()) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Current password is required"));
+        }
+
+        if (request.getNewPassword() == null
+                || request.getNewPassword().isBlank()) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "New password is required"));
+        }
+
+        if (request.getNewPassword().length() < 6) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "New password must be at least 6 characters"
+                    ));
+        }
+
+        String username = authentication.getName();
+
+        User user = userRepository.findByUsername(username)
+                .orElse(null);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "User not found"));
+        }
+
+        if (!passwordEncoder.matches(
+                request.getCurrentPassword(),
+                user.getPassword())) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Current password is incorrect"));
+        }
+
+        if (passwordEncoder.matches(
+                request.getNewPassword(),
+                user.getPassword())) {
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of(
+                            "message",
+                            "New password must be different from current password"
+                    ));
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(request.getNewPassword())
+        );
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(
+                Map.of("message", "Password changed successfully")
+        );
     }
 
 }
