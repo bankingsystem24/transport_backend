@@ -1,6 +1,7 @@
 package transport_backend.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,11 +24,21 @@ public class VehicleMasterController {
 
     // CREATE
     @PostMapping
-    public ResponseEntity<VehicleMasterResponse> create(
+    public ResponseEntity<?> create(
             @RequestBody VehicleMasterRequest request) {
 
-        return ResponseEntity.ok(
-                vehicleMasterService.create(request));
+        try {
+            return ResponseEntity.ok(
+                    vehicleMasterService.create(request)
+            );
+
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of(
+                            "message", e.getMessage()
+                    ));
+        }
     }
 
     // GET ALL
@@ -58,12 +69,19 @@ public class VehicleMasterController {
 
     // UPDATE
     @PutMapping("/{id}")
-    public ResponseEntity<VehicleMasterResponse> update(
+    public ResponseEntity<?> update(
             @PathVariable Long id,
             @RequestBody VehicleMasterRequest request) {
 
-        return ResponseEntity.ok(
-                vehicleMasterService.update(id, request));
+        try {
+            return ResponseEntity.ok(
+                    vehicleMasterService.update(id, request)
+            );
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of("message", e.getMessage())
+            );
+        }
     }
 
     // DELETE

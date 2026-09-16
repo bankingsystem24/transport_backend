@@ -40,11 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String authHeader = request.getHeader("Authorization");
 
-        System.out.println("Request: " + request.getRequestURI());
-        System.out.println("Authorization: " + authHeader);
-
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("JWT: Authorization header missing");
             filterChain.doFilter(request, response);
             return;
         }
@@ -54,27 +50,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
 
             if (!jwtUtil.validateToken(token)) {
-                System.out.println("JWT: Token invalid");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String username = jwtUtil.extractUsername(token);
-
-            System.out.println("JWT username: " + username);
+            Long userId = jwtUtil.extractUserId(token);
 
             User user = userRepository
                     .findByUsername(username)
                     .orElse(null);
 
             if (user == null) {
-                System.out.println("JWT: User not found");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             if (!user.getActive()) {
-                System.out.println("JWT: User inactive");
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -91,20 +83,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             List.of(authority)
                     );
 
+            authentication.setDetails(userId);
+
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authentication);
 
-            System.out.println(
-                    "JWT: Authentication successful for "
-                            + username
-                            + " with "
-                            + authority.getAuthority()
-            );
-
         } catch (Exception e) {
 
-            System.out.println("JWT ERROR: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
