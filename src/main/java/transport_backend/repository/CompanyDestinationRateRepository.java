@@ -8,6 +8,7 @@ import transport_backend.entity.CompanyDestinationRate;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface CompanyDestinationRateRepository
         extends JpaRepository<CompanyDestinationRate, Long> {
@@ -23,19 +24,7 @@ public interface CompanyDestinationRateRepository
             LocalDate toDate
     );
 
-    /*
-     * Find overlapping date ranges for the same
-     * destination and product.
-     *
-     * Existing:
-     * 01-09-2026 to 30-09-2026
-     *
-     * New:
-     * 15-09-2026 to 15-10-2026
-     *
-     * This is an overlap.
-     */
-    @Query("""
+      @Query("""
         SELECT c
         FROM CompanyDestinationRate c
         WHERE c.destination.id = :destinationId
@@ -50,10 +39,6 @@ public interface CompanyDestinationRateRepository
             @Param("toDate") LocalDate toDate
     );
 
-    /*
-     * Same overlap check, but excludes the current record.
-     * Used during UPDATE.
-     */
     @Query("""
         SELECT c
         FROM CompanyDestinationRate c
@@ -70,4 +55,11 @@ public interface CompanyDestinationRateRepository
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate
     );
+
+
+    Optional<CompanyDestinationRate> findByProduct_IdAndDestination_IdAndFromDateLessThanEqualAndToDateGreaterThanEqual(
+        Long productId,
+        Long destinationId,
+        LocalDate fromDate,
+        LocalDate fromDate2);
 }

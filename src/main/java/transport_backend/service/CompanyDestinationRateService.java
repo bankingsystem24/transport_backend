@@ -20,236 +20,250 @@ import java.util.List;
 @Transactional
 public class CompanyDestinationRateService {
 
-    private final CompanyDestinationRateRepository rateRepository;
-    private final DestinationMasterRepository destinationRepository;
-    private final ProductMasterRepository productRepository;
+        private final CompanyDestinationRateRepository rateRepository;
+        private final DestinationMasterRepository destinationRepository;
+        private final ProductMasterRepository productRepository;
 
-    public CompanyDestinationRateService(
-            CompanyDestinationRateRepository rateRepository,
-            DestinationMasterRepository destinationRepository,
-            ProductMasterRepository productRepository) {
+        public CompanyDestinationRateService(
+                        CompanyDestinationRateRepository rateRepository,
+                        DestinationMasterRepository destinationRepository,
+                        ProductMasterRepository productRepository) {
 
-        this.rateRepository = rateRepository;
-        this.destinationRepository = destinationRepository;
-        this.productRepository = productRepository;
-    }
-
-    // =========================================================
-    // CREATE
-    // =========================================================
-
-    public CompanyDestinationRateResponse create(
-            CompanyDestinationRateRequest request) {
-
-        validateDates(
-                request.getFromDate(),
-                request.getToDate()
-        );
-
-        DestinationMaster destination =
-                destinationRepository.findById(request.getDestinationId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Destination not found with id: "
-                                                + request.getDestinationId()
-                                ));
-
-        ProductMaster product =
-                productRepository.findById(request.getProductId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Product not found with id: "
-                                                + request.getProductId()
-                                ));
-
-        // Check overlapping dates
-        List<CompanyDestinationRate> overlappingRates =
-                rateRepository.findOverlappingRates(
-                        request.getDestinationId(),
-                        request.getProductId(),
-                        request.getFromDate(),
-                        request.getToDate()
-                );
-
-        if (!overlappingRates.isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Rate already exists for this destination and product "
-                            + "for the selected date range"
-            );
+                this.rateRepository = rateRepository;
+                this.destinationRepository = destinationRepository;
+                this.productRepository = productRepository;
         }
 
-        CompanyDestinationRate rate =
-                new CompanyDestinationRate();
+        // =========================================================
+        // CREATE
+        // =========================================================
 
-        rate.setDestination(destination);
-        rate.setProduct(product);
-        rate.setFromDate(request.getFromDate());
-        rate.setToDate(request.getToDate());
-        rate.setCompanyRate(request.getCompanyRate());
+        public CompanyDestinationRateResponse create(
+                        CompanyDestinationRateRequest request) {
 
-        CompanyDestinationRate saved =
-                rateRepository.save(rate);
+                validateDates(
+                                request.getFromDate(),
+                                request.getToDate());
 
-        return mapToResponse(saved);
-    }
+                DestinationMaster destination = destinationRepository.findById(request.getDestinationId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Destination not found with id: "
+                                                                + request.getDestinationId()));
 
-    // =========================================================
-    // GET ALL
-    // =========================================================
+                ProductMaster product = productRepository.findById(request.getProductId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Product not found with id: "
+                                                                + request.getProductId()));
 
-    @Transactional(readOnly = true)
-    public List<CompanyDestinationRateResponse> getAll() {
+                // Check overlapping dates
+                List<CompanyDestinationRate> overlappingRates = rateRepository.findOverlappingRates(
+                                request.getDestinationId(),
+                                request.getProductId(),
+                                request.getFromDate(),
+                                request.getToDate());
 
-        return rateRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
+                if (!overlappingRates.isEmpty()) {
 
-    // =========================================================
-    // GET BY ID
-    // =========================================================
+                        throw new IllegalArgumentException(
+                                        "Rate already exists for this destination and product "
+                                                        + "for the selected date range");
+                }
 
-    @Transactional(readOnly = true)
-    public CompanyDestinationRateResponse getById(Long id) {
+                CompanyDestinationRate rate = new CompanyDestinationRate();
 
-        CompanyDestinationRate rate =
-                rateRepository.findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Company destination rate not found with id: "
-                                                + id
-                                ));
+                rate.setDestination(destination);
+                rate.setProduct(product);
+                rate.setFromDate(request.getFromDate());
+                rate.setToDate(request.getToDate());
+                rate.setCompanyRate(request.getCompanyRate());
 
-        return mapToResponse(rate);
-    }
+                CompanyDestinationRate saved = rateRepository.save(rate);
 
-    // =========================================================
-    // UPDATE
-    // =========================================================
-
-    public CompanyDestinationRateResponse update(
-            Long id,
-            CompanyDestinationRateRequest request) {
-
-        validateDates(
-                request.getFromDate(),
-                request.getToDate()
-        );
-
-        CompanyDestinationRate rate =
-                rateRepository.findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Company destination rate not found with id: "
-                                                + id
-                                ));
-
-        DestinationMaster destination =
-                destinationRepository.findById(request.getDestinationId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Destination not found with id: "
-                                                + request.getDestinationId()
-                                ));
-
-        ProductMaster product =
-                productRepository.findById(request.getProductId())
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Product not found with id: "
-                                                + request.getProductId()
-                                ));
-
-        // Check overlapping dates excluding current record
-        List<CompanyDestinationRate> overlappingRates =
-                rateRepository.findOverlappingRatesForUpdate(
-                        id,
-                        request.getDestinationId(),
-                        request.getProductId(),
-                        request.getFromDate(),
-                        request.getToDate()
-                );
-
-        if (!overlappingRates.isEmpty()) {
-
-            throw new IllegalArgumentException(
-                    "Rate already exists for this destination and product "
-                            + "for the selected date range"
-            );
+                return mapToResponse(saved);
         }
 
-        rate.setDestination(destination);
-        rate.setProduct(product);
-        rate.setFromDate(request.getFromDate());
-        rate.setToDate(request.getToDate());
-        rate.setCompanyRate(request.getCompanyRate());
+        // =========================================================
+        // GET ALL
+        // =========================================================
 
-        CompanyDestinationRate updated =
-                rateRepository.save(rate);
+        @Transactional(readOnly = true)
+        public List<CompanyDestinationRateResponse> getAll() {
 
-        return mapToResponse(updated);
-    }
-
-    // =========================================================
-    // DELETE
-    // =========================================================
-
-    public void delete(Long id) {
-
-        CompanyDestinationRate rate =
-                rateRepository.findById(id)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Company destination rate not found with id: "
-                                                + id
-                                ));
-
-        rateRepository.delete(rate);
-    }
-
-    // =========================================================
-    // DATE VALIDATION
-    // =========================================================
-
-    private void validateDates(
-            LocalDate fromDate,
-            LocalDate toDate) {
-
-        if (fromDate == null || toDate == null) {
-            throw new IllegalArgumentException(
-                    "From date and To date are required"
-            );
+                return rateRepository.findAll()
+                                .stream()
+                                .map(this::mapToResponse)
+                                .toList();
         }
 
-        if (toDate.isBefore(fromDate)) {
-            throw new IllegalArgumentException(
-                    "To date cannot be before From date"
-            );
+        // =========================================================
+        // GET BY ID
+        // =========================================================
+
+        @Transactional(readOnly = true)
+        public CompanyDestinationRateResponse getById(Long id) {
+
+                CompanyDestinationRate rate = rateRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Company destination rate not found with id: "
+                                                                + id));
+
+                return mapToResponse(rate);
         }
-    }
 
-    // =========================================================
-    // ENTITY -> RESPONSE
-    // =========================================================
+        // =========================================================
+        // UPDATE
+        // =========================================================
 
-    private CompanyDestinationRateResponse mapToResponse(
-            CompanyDestinationRate rate) {
+        public CompanyDestinationRateResponse update(
+                        Long id,
+                        CompanyDestinationRateRequest request) {
 
-        return new CompanyDestinationRateResponse(
-                rate.getId(),
+                validateDates(
+                                request.getFromDate(),
+                                request.getToDate());
 
-                rate.getDestination().getId(),
-                rate.getDestination().getDestination(),
+                CompanyDestinationRate rate = rateRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Company destination rate not found with id: "
+                                                                + id));
 
-                rate.getProduct().getId(),
-                rate.getProduct().getProductName(),
+                DestinationMaster destination = destinationRepository.findById(request.getDestinationId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Destination not found with id: "
+                                                                + request.getDestinationId()));
 
-                rate.getFromDate(),
-                rate.getToDate(),
+                ProductMaster product = productRepository.findById(request.getProductId())
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Product not found with id: "
+                                                                + request.getProductId()));
 
-                rate.getCompanyRate()
-        );
-    }
+                // Check overlapping dates excluding current record
+                List<CompanyDestinationRate> overlappingRates = rateRepository.findOverlappingRatesForUpdate(
+                                id,
+                                request.getDestinationId(),
+                                request.getProductId(),
+                                request.getFromDate(),
+                                request.getToDate());
+
+                if (!overlappingRates.isEmpty()) {
+
+                        throw new IllegalArgumentException(
+                                        "Rate already exists for this destination and product "
+                                                        + "for the selected date range");
+                }
+
+                rate.setDestination(destination);
+                rate.setProduct(product);
+                rate.setFromDate(request.getFromDate());
+                rate.setToDate(request.getToDate());
+                rate.setCompanyRate(request.getCompanyRate());
+
+                CompanyDestinationRate updated = rateRepository.save(rate);
+
+                return mapToResponse(updated);
+        }
+
+        // =========================================================
+        // DELETE
+        // =========================================================
+
+        public void delete(Long id) {
+
+                CompanyDestinationRate rate = rateRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Company destination rate not found with id: "
+                                                                + id));
+
+                rateRepository.delete(rate);
+        }
+
+        // =========================================================
+        // DATE VALIDATION
+        // =========================================================
+
+        private void validateDates(
+                        LocalDate fromDate,
+                        LocalDate toDate) {
+
+                if (fromDate == null || toDate == null) {
+                        throw new IllegalArgumentException(
+                                        "From date and To date are required");
+                }
+
+                if (toDate.isBefore(fromDate)) {
+                        throw new IllegalArgumentException(
+                                        "To date cannot be before From date");
+                }
+        }
+
+        // =========================================================
+        // ENTITY -> RESPONSE
+        // =========================================================
+
+        private CompanyDestinationRateResponse mapToResponse(
+                        CompanyDestinationRate rate) {
+
+                return new CompanyDestinationRateResponse(
+                                rate.getId(),
+
+                                rate.getDestination().getId(),
+                                rate.getDestination().getDestination(),
+
+                                rate.getProduct().getId(),
+                                rate.getProduct().getProductName(),
+
+                                rate.getFromDate(),
+                                rate.getToDate(),
+
+                                rate.getCompanyRate());
+        }
+
+        public CompanyDestinationRateResponse getCompanyRate(
+                        Long productId,
+                        Long destinationId,
+                        LocalDate fromDate) {
+
+                CompanyDestinationRate rate = rateRepository
+                                .findByProduct_IdAndDestination_IdAndFromDateLessThanEqualAndToDateGreaterThanEqual(
+                                                productId,
+                                                destinationId,
+                                                fromDate,
+                                                fromDate)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Company rate not found for productId: "
+                                                                + productId
+                                                                + ", destinationId: "
+                                                                + destinationId
+                                                                + ", date: "
+                                                                + fromDate));
+
+                return convertToResponse(rate);
+        }
+
+        private CompanyDestinationRateResponse convertToResponse(
+                        CompanyDestinationRate rate) {
+
+                CompanyDestinationRateResponse response = new CompanyDestinationRateResponse();
+
+                response.setId(rate.getId());
+
+                if (rate.getProduct() != null) {
+                        response.setProductId(rate.getProduct().getId());
+                        response.setProductName(
+                                        rate.getProduct().getProductName());
+                }
+
+                if (rate.getDestination() != null) {
+                        response.setDestinationId(rate.getDestination().getId());
+                        response.setDestinationName(
+                                        rate.getDestination().getDestination());
+                }
+
+                response.setFromDate(rate.getFromDate());
+                response.setToDate(rate.getToDate());
+                response.setCompanyRate(rate.getCompanyRate());
+
+                return response;
+        }
+
 }

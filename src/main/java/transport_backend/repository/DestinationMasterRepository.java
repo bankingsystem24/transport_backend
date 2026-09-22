@@ -12,3 +12,5 @@ public interface DestinationMasterRepository
 
     boolean existsByDestinationIgnoreCase(String destination);
 }
+
+

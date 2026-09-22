@@ -10,6 +10,7 @@ import transport_backend.dto.CompanyDestinationRateRequest;
 import transport_backend.dto.CompanyDestinationRateResponse;
 import transport_backend.service.CompanyDestinationRateService;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -93,4 +94,20 @@ public class CompanyDestinationRateController {
                 )
         );
     }
+
+        @GetMapping("/companyRate")
+        public ResponseEntity<CompanyDestinationRateResponse> getCompanyRate(
+                @RequestParam Long productId,
+                @RequestParam Long destinationId,
+                @RequestParam LocalDate fromDate) {
+
+        return ResponseEntity.ok(
+                rateService.getCompanyRate(
+                        productId,
+                        destinationId,
+                        fromDate
+                )
+        );
+        }
+
 }
