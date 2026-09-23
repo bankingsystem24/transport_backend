@@ -43,4 +43,19 @@ public interface TransportTransactionRepository
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate
     );
+
+    @Query("""
+        SELECT t
+        FROM TransportTransaction t
+        LEFT JOIN FETCH t.owner
+        WHERE t.diDate BETWEEN :fromDate AND :toDate
+        AND t.owner IS NOT NULL
+        ORDER BY t.owner.id
+        """)
+        List<TransportTransaction> findBusinessStatusTransactions(
+                @Param("fromDate") LocalDate fromDate,
+                @Param("toDate") LocalDate toDate
+        );
+
+
 }

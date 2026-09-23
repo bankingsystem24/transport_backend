@@ -4,6 +4,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import transport_backend.dto.BusinessStatusResponse;
 import transport_backend.dto.LedgerBilledVehicleResponse;
 import transport_backend.dto.LedgerPaymentResponse;
 import transport_backend.service.LedgerService;
@@ -52,4 +53,18 @@ public class LedgerController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/business-status")
+    public ResponseEntity<List<BusinessStatusResponse>> getBusinessStatus(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+
+        List<BusinessStatusResponse> response = ledgerService.getBusinessStatus(
+                fromDate,
+                toDate);
+
+        return ResponseEntity.ok(response);
+    }
+
 }
