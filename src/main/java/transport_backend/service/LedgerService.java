@@ -3,7 +3,10 @@ package transport_backend.service;
 import org.springframework.stereotype.Service;
 
 import transport_backend.dto.LedgerBilledVehicleResponse;
+import transport_backend.dto.LedgerPaymentResponse;
+import transport_backend.entity.PaymentTransaction;
 import transport_backend.entity.TransportTransaction;
+import transport_backend.repository.PaymentTransactionRepository;
 import transport_backend.repository.TransportTransactionRepository;
 
 import java.math.BigDecimal;
@@ -17,12 +20,14 @@ import java.util.Map;
 public class LedgerService {
 
     private final TransportTransactionRepository transportTransactionRepository;
+    private final PaymentTransactionRepository paymentTransactionRepository;
 
     public LedgerService(
-            TransportTransactionRepository transportTransactionRepository) {
+            TransportTransactionRepository transportTransactionRepository,
+            PaymentTransactionRepository paymentTransactionRepository) {
 
-        this.transportTransactionRepository =
-                transportTransactionRepository;
+        this.transportTransactionRepository = transportTransactionRepository;
+        this.paymentTransactionRepository = paymentTransactionRepository;
     }
 
     public List<LedgerBilledVehicleResponse> getLedgerBilled(
@@ -47,21 +52,18 @@ public class LedgerService {
                     "From date cannot be greater than to date");
         }
 
-        List<TransportTransaction> transactions =
-                transportTransactionRepository
-                        .findLedgerBilledTransactions(
-                                ownerId,
-                                fromDate,
-                                toDate
-                        );
+        List<TransportTransaction> transactions = transportTransactionRepository
+                .findLedgerBilledTransactions(
+                        ownerId,
+                        fromDate,
+                        toDate);
 
         /*
          * Group transactions vehicle-wise.
          *
          * Key = vehicle ID
          */
-        Map<Long, LedgerBilledVehicleResponse> vehicleMap =
-                new LinkedHashMap<>();
+        Map<Long, LedgerBilledVehicleResponse> vehicleMap = new LinkedHashMap<>();
 
         for (TransportTransaction transaction : transactions) {
 
@@ -78,8 +80,7 @@ public class LedgerService {
                     ? vehicleId
                     : -transaction.getId();
 
-            LedgerBilledVehicleResponse response =
-                    vehicleMap.get(mapKey);
+            LedgerBilledVehicleResponse response = vehicleMap.get(mapKey);
 
             if (response == null) {
 
@@ -89,50 +90,82 @@ public class LedgerService {
                         BigDecimal.ZERO,
                         BigDecimal.ZERO,
                         BigDecimal.ZERO,
-                        BigDecimal.ZERO
-                );
+                        BigDecimal.ZERO);
 
                 vehicleMap.put(mapKey, response);
             }
 
-            BigDecimal billedAmount =
-                    transaction.getTotalAmount() != null
-                            ? transaction.getTotalAmount()
-                            : BigDecimal.ZERO;
+            BigDecimal billedAmount = transaction.getTotalAmount() != null
+                    ? transaction.getTotalAmount()
+                    : BigDecimal.ZERO;
 
-            BigDecimal dieselAmount =
-                    transaction.getDieselAmount() != null
-                            ? transaction.getDieselAmount()
-                            : BigDecimal.ZERO;
+            BigDecimal dieselAmount = transaction.getDieselAmount() != null
+                    ? transaction.getDieselAmount()
+                    : BigDecimal.ZERO;
 
-            BigDecimal advance =
-                    transaction.getAdvance() != null
-                            ? transaction.getAdvance()
-                            : BigDecimal.ZERO;
+            BigDecimal advance = transaction.getAdvance() != null
+                    ? transaction.getAdvance()
+                    : BigDecimal.ZERO;
 
-
-            BigDecimal balanceAmount =
-                    billedAmount
-                            .subtract(dieselAmount)
-                            .subtract(advance);
+            BigDecimal balanceAmount = billedAmount
+                    .subtract(dieselAmount)
+                    .subtract(advance);
 
             response.setBalanceAmount(
-                    response.getBalanceAmount().add(balanceAmount)
-            );
+                    response.getBalanceAmount().add(balanceAmount));
 
             response.setDieselAmount(
-                    response.getDieselAmount().add(dieselAmount)
-            );
+                    response.getDieselAmount().add(dieselAmount));
 
             response.setAdvance(
-                    response.getAdvance().add(advance)
-            );
+                    response.getAdvance().add(advance));
 
             response.setBilledAmount(
-                    response.getBilledAmount().add(billedAmount)
-            );
+                    response.getBilledAmount().add(billedAmount));
         }
 
         return new ArrayList<>(vehicleMap.values());
     }
+
+    public List<LedgerPaymentResponse> getLedgerPayments(
+            Long ownerId,
+            LocalDate fromDate,
+            LocalDate toDate) {
+
+        if (ownerId == null) {
+            throw new RuntimeException("Owner ID is required");
+        }
+
+        if (fromDate == null) {
+            throw new RuntimeException("From date is required");
+        }
+
+        if (toDate == null) {
+            throw new RuntimeException("To date is required");
+        }
+
+        if (fromDate.isAfter(toDate)) {
+            throw new RuntimeException(
+                    "From date cannot be greater than to date");
+        }
+
+        List<PaymentTransaction> payments = paymentTransactionRepository
+                .findByOwner_IdAndPaymentMonthBetween(
+                        ownerId,
+                        fromDate,
+                        toDate);
+
+        return payments.stream()
+                .map(payment -> new LedgerPaymentResponse(
+                        payment.getId(),
+                        payment.getPaymentDate(),
+                        payment.getPaymentMonth(),
+                        payment.getBankName(),
+                        payment.getAccountNo(),
+                        payment.getChequeNo(),
+                        payment.getAmount(),
+                        payment.getRemarks()))
+                .toList();
+    }
+
 }

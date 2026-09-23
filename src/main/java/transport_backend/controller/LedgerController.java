@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import transport_backend.dto.LedgerBilledVehicleResponse;
+import transport_backend.dto.LedgerPaymentResponse;
 import transport_backend.service.LedgerService;
 
 import java.time.LocalDate;
@@ -24,20 +25,30 @@ public class LedgerController {
     public ResponseEntity<List<LedgerBilledVehicleResponse>> getLedgerBilled(
             @RequestParam Long ownerId,
 
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
 
-            @RequestParam
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-            LocalDate toDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
 
-        List<LedgerBilledVehicleResponse> response =
-                ledgerService.getLedgerBilled(
-                        ownerId,
-                        fromDate,
-                        toDate
-                );
+        List<LedgerBilledVehicleResponse> response = ledgerService.getLedgerBilled(
+                ownerId,
+                fromDate,
+                toDate);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/payments")
+    public ResponseEntity<List<LedgerPaymentResponse>> getLedgerPayments(
+            @RequestParam Long ownerId,
+
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+
+        List<LedgerPaymentResponse> response = ledgerService.getLedgerPayments(
+                ownerId,
+                fromDate,
+                toDate);
 
         return ResponseEntity.ok(response);
     }
