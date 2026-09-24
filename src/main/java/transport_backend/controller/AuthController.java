@@ -28,60 +28,65 @@ public class AuthController {
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody Map<String, String> request) {
+@PostMapping("/login")
+public ResponseEntity<?> login(
+        @RequestBody Map<String, Object> request) {
 
-        String username = request.get("username");
-        String password = request.get("password");
+    String username = (String) request.get("username");
+    String password = (String) request.get("password");
 
-        User user = userRepository
-                .findByUsername(username)
-                .orElse(null);
+    Long companyId = ((Number) request.get("companyId")).longValue();
 
-        if (user == null) {
-            return ResponseEntity
-                    .status(401)
-                    .body(Map.of(
-                            "message",
-                            "Invalid username or password"
-                    ));
-        }
+    User user = userRepository
+            .findByUsername(username)
+            .orElse(null);
 
-        if (!passwordEncoder.matches(
-                password,
-                user.getPassword())) {
-
-            return ResponseEntity
-                    .status(401)
-                    .body(Map.of(
-                            "message",
-                            "Invalid username or password"
-                    ));
-        }
-
-        if (!user.getActive()) {
-            return ResponseEntity
-                    .status(401)
-                    .body(Map.of(
-                            "message",
-                            "User account is inactive"
-                    ));
-        }
-
-        String token = jwtUtil.generateToken(
-                user.getUsername(),user.getId()
-        );
-
-        Map<String, Object> response = new HashMap<>();
-
-        response.put("id", user.getId());
-        response.put("role", user.getRole());
-        response.put("message", "Login successful");
-        response.put("username", user.getUsername());
-        response.put("name", user.getName());
-        response.put("token", token);
-
-        return ResponseEntity.ok(response);
+    if (user == null) {
+        return ResponseEntity
+                .status(401)
+                .body(Map.of(
+                        "message",
+                        "Invalid username or password"
+                ));
     }
+
+    if (!passwordEncoder.matches(
+            password,
+            user.getPassword())) {
+
+        return ResponseEntity
+                .status(401)
+                .body(Map.of(
+                        "message",
+                        "Invalid username or password"
+                ));
+    }
+
+    if (!user.getActive()) {
+        return ResponseEntity
+                .status(401)
+                .body(Map.of(
+                        "message",
+                        "User account is inactive"
+                ));
+    }
+
+    String token = jwtUtil.generateToken(
+            user.getUsername(),
+            user.getId(),
+            companyId
+    );
+
+    Map<String, Object> response = new HashMap<>();
+
+    response.put("id", user.getId());
+    response.put("role", user.getRole());
+    response.put("message", "Login successful");
+    response.put("username", user.getUsername());
+    response.put("name", user.getName());
+    response.put("token", token);
+
+    return ResponseEntity.ok(response);
+}
+
 }

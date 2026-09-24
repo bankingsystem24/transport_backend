@@ -5,12 +5,14 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import transport_backend.dto.TransportTransactionReportResponse;
 import transport_backend.dto.TransportTransactionRequest;
 import transport_backend.dto.TransportTransactionResponse;
+import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.TransportTransactionService;
 
 @RestController
@@ -37,10 +39,14 @@ public class TransportTransactionController {
 
         // GET ALL
         @GetMapping
-        public ResponseEntity<List<TransportTransactionResponse>> getAll() {
+        public ResponseEntity<List<TransportTransactionResponse>> getAll(Authentication authentication) {
+
+        JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+
+        Long companyId = details.getCompanyId();
 
                 return ResponseEntity.ok(
-                                transportTransactionService.getAll());
+                                transportTransactionService.getAll(companyId));
         }
 
         // GET BY ID

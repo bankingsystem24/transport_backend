@@ -12,6 +12,7 @@ public class LedgerPaymentResponse {
     private String bankName;
     private String accountNo;
     private String chequeNo;
+    private Long companyId;
 
     private BigDecimal amount;
     private String remarks;
@@ -27,6 +28,7 @@ public class LedgerPaymentResponse {
             String accountNo,
             String chequeNo,
             BigDecimal amount,
+            Long companyId,
             String remarks) {
 
         this.id = id;
@@ -36,6 +38,7 @@ public class LedgerPaymentResponse {
         this.accountNo = accountNo;
         this.chequeNo = chequeNo;
         this.amount = amount;
+        this.companyId = companyId;
         this.remarks = remarks;
     }
 
@@ -101,5 +104,13 @@ public class LedgerPaymentResponse {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public Long getCompanyId(){
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId){
+        this.companyId= companyId;
     }
 }

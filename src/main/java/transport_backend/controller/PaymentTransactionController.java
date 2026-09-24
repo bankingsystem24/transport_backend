@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 
 import transport_backend.dto.PaymentTransactionRequest;
 import transport_backend.dto.PaymentTransactionResponse;
+import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.PaymentTransactionService;
 
 @RestController
@@ -49,10 +51,14 @@ public class PaymentTransactionController {
 
     // GET ALL
     @GetMapping
-    public ResponseEntity<List<PaymentTransactionResponse>> getAll() {
+    public ResponseEntity<List<PaymentTransactionResponse>> getAll(Authentication authentication) {
+
+        JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+
+        Long companyId = details.getCompanyId();
 
         return ResponseEntity.ok(
-                service.getAll()
+                service.getAll(companyId)
         );
     }
 

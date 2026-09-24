@@ -112,14 +112,15 @@ public class TransportTransactionService {
         // GET ALL
         // =========================================================
 
-        @Transactional(readOnly = true)
-        public List<TransportTransactionResponse> getAll() {
+@Transactional(readOnly = true)
+public List<TransportTransactionResponse> getAll(Long companyId) {
 
-                return transactionRepository.findAll()
-                                .stream()
-                                .map(this::mapToResponse)
-                                .toList();
-        }
+    return transactionRepository
+            .findByCompany_Id(companyId)
+            .stream()
+            .map(this::mapToResponse)
+            .toList();
+}
 
         // =========================================================
         // UPDATE

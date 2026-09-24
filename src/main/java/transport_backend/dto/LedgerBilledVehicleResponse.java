@@ -11,6 +11,8 @@ public class LedgerBilledVehicleResponse {
     private BigDecimal dieselAmount;
     private BigDecimal advance;
     private BigDecimal billedAmount;
+    private Long companyId;
+    private String companyName;
 
     public LedgerBilledVehicleResponse() {
     }
@@ -21,7 +23,9 @@ public class LedgerBilledVehicleResponse {
             BigDecimal balanceAmount,
             BigDecimal dieselAmount,
             BigDecimal advance,
-            BigDecimal billedAmount) {
+            BigDecimal billedAmount,
+            Long companyId,
+            String companyName) {
 
         this.vehicleId = vehicleId;
         this.vehicleName = vehicleName;
@@ -29,6 +33,8 @@ public class LedgerBilledVehicleResponse {
         this.dieselAmount = dieselAmount;
         this.advance = advance;
         this.billedAmount = billedAmount;
+        this.companyId = companyId;
+        this.companyName = companyName;
     }
 
     public Long getVehicleId() {
@@ -77,5 +83,21 @@ public class LedgerBilledVehicleResponse {
 
     public void setBilledAmount(BigDecimal billedAmount) {
         this.billedAmount = billedAmount;
+    }
+
+    public Long getCompanyId(){
+        return companyId;
+    }
+
+    public void setCompanyId(Long companyId){
+        this.companyId=companyId;
+    }
+
+    public String getCompanyName(){
+        return companyName;
+    }
+
+    public void setCompanyName(String companyName){
+        this.companyName = companyName;
     }
 } 

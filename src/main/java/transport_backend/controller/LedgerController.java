@@ -7,8 +7,9 @@ import org.springframework.web.bind.annotation.*;
 import transport_backend.dto.BusinessStatusResponse;
 import transport_backend.dto.LedgerBilledVehicleResponse;
 import transport_backend.dto.LedgerPaymentResponse;
+import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.LedgerService;
-
+import org.springframework.security.core.Authentication;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -25,13 +26,16 @@ public class LedgerController {
     @GetMapping("/billed")
     public ResponseEntity<List<LedgerBilledVehicleResponse>> getLedgerBilled(
             @RequestParam Long ownerId,
-
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Authentication authentication
+            ) {
+        JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+        Long companyId = details.getCompanyId();
 
         List<LedgerBilledVehicleResponse> response = ledgerService.getLedgerBilled(
                 ownerId,
+                companyId,
                 fromDate,
                 toDate);
 
@@ -41,13 +45,14 @@ public class LedgerController {
     @GetMapping("/payments")
     public ResponseEntity<List<LedgerPaymentResponse>> getLedgerPayments(
             @RequestParam Long ownerId,
-
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
-
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
-
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Authentication authentication) {
+        JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+        Long companyId = details.getCompanyId();
         List<LedgerPaymentResponse> response = ledgerService.getLedgerPayments(
                 ownerId,
+                companyId,
                 fromDate,
                 toDate);
 
@@ -57,10 +62,16 @@ public class LedgerController {
     @GetMapping("/business-status")
     public ResponseEntity<List<BusinessStatusResponse>> getBusinessStatus(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
+            Authentication authentication) {
+                JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+                Long companyId = details.getCompanyId();
 
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
-
+            if (companyId == null) {
+                throw new RuntimeException("Company ID not found in JWT");
+    }
         List<BusinessStatusResponse> response = ledgerService.getBusinessStatus(
+                companyId,
                 fromDate,
                 toDate);
 

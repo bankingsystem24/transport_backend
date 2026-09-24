@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import transport_backend.dto.BusinessStatusResponse;
 import transport_backend.dto.LedgerBilledVehicleResponse;
 import transport_backend.dto.LedgerPaymentResponse;
+import transport_backend.entity.CompanyMaster;
 import transport_backend.entity.PaymentTransaction;
 import transport_backend.entity.TransportTransaction;
+import transport_backend.repository.CompanyMasterRepository;
 import transport_backend.repository.PaymentTransactionRepository;
 import transport_backend.repository.TransportTransactionRepository;
 
@@ -22,17 +24,21 @@ public class LedgerService {
 
         private final TransportTransactionRepository transportTransactionRepository;
         private final PaymentTransactionRepository paymentTransactionRepository;
+        private final CompanyMasterRepository companyMasterRepository;
 
         public LedgerService(
                         TransportTransactionRepository transportTransactionRepository,
-                        PaymentTransactionRepository paymentTransactionRepository) {
+                        PaymentTransactionRepository paymentTransactionRepository,
+                        CompanyMasterRepository companyMasterRepository) {
 
                 this.transportTransactionRepository = transportTransactionRepository;
                 this.paymentTransactionRepository = paymentTransactionRepository;
+                this.companyMasterRepository = companyMasterRepository;
         }
 
         public List<LedgerBilledVehicleResponse> getLedgerBilled(
                         Long ownerId,
+                        Long companyId,
                         LocalDate fromDate,
                         LocalDate toDate) {
 
@@ -56,14 +62,10 @@ public class LedgerService {
                 List<TransportTransaction> transactions = transportTransactionRepository
                                 .findLedgerBilledTransactions(
                                                 ownerId,
+                                                companyId,
                                                 fromDate,
                                                 toDate);
 
-                /*
-                 * Group transactions vehicle-wise.
-                 *
-                 * Key = vehicle ID
-                 */
                 Map<Long, LedgerBilledVehicleResponse> vehicleMap = new LinkedHashMap<>();
 
                 for (TransportTransaction transaction : transactions) {
@@ -73,6 +75,9 @@ public class LedgerService {
                                         : null;
 
                         String vehicleName = transaction.getVehicleName();
+                         String companyName = transaction.getCompany() != null
+                                ? transaction.getCompany().getCompanyName()
+                                : null;
 
                         /*
                          * If vehicle ID is null, use a separate key.
@@ -91,7 +96,9 @@ public class LedgerService {
                                                 BigDecimal.ZERO,
                                                 BigDecimal.ZERO,
                                                 BigDecimal.ZERO,
-                                                BigDecimal.ZERO);
+                                                BigDecimal.ZERO,
+                                                companyId,
+                                                companyName);
 
                                 vehicleMap.put(mapKey, response);
                         }
@@ -123,6 +130,9 @@ public class LedgerService {
 
                         response.setBilledAmount(
                                         response.getBilledAmount().add(billedAmount));
+                        response.setCompanyId(response.getCompanyId());
+                        response.setCompanyName(response.getCompanyName());
+
                 }
 
                 return new ArrayList<>(vehicleMap.values());
@@ -130,6 +140,7 @@ public class LedgerService {
 
         public List<LedgerPaymentResponse> getLedgerPayments(
                         Long ownerId,
+                        Long companyId,
                         LocalDate fromDate,
                         LocalDate toDate) {
 
@@ -151,8 +162,9 @@ public class LedgerService {
                 }
 
                 List<PaymentTransaction> payments = paymentTransactionRepository
-                                .findByOwner_IdAndPaymentMonthBetween(
+                                .findByOwner_IdAndCompany_IdAndPaymentMonthBetween(
                                                 ownerId,
+                                                companyId,
                                                 fromDate,
                                                 toDate);
 
@@ -165,11 +177,13 @@ public class LedgerService {
                                                 payment.getAccountNo(),
                                                 payment.getChequeNo(),
                                                 payment.getAmount(),
+                                                payment.getCompany().getId(),
                                                 payment.getRemarks()))
                                 .toList();
         }
 
         public List<BusinessStatusResponse> getBusinessStatus(
+                        Long companyId,
                         LocalDate fromDate,
                         LocalDate toDate) {
 
@@ -186,19 +200,24 @@ public class LedgerService {
                                         "From date cannot be greater than to date");
                 }
 
+                CompanyMaster company = companyMasterRepository.findById(companyId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Company not found with id: " + companyId));
+
+                String companyName = company.getCompanyName();
+
                 List<TransportTransaction> transactions = transportTransactionRepository
                                 .findBusinessStatusTransactions(
+                                                companyId,
                                                 fromDate,
                                                 toDate);
 
                 List<PaymentTransaction> payments = paymentTransactionRepository
                                 .findBusinessStatusPayments(
+                                                companyId,
                                                 fromDate,
                                                 toDate);
 
-                /*
-                 * Owner-wise transport totals
-                 */
                 Map<Long, BusinessStatusResponse> ownerMap = new LinkedHashMap<>();
 
                 for (TransportTransaction transaction : transactions) {
@@ -218,6 +237,8 @@ public class LedgerService {
                                 response = new BusinessStatusResponse(
                                                 ownerId,
                                                 ownerName,
+                                                companyId,
+                                                companyName,
                                                 BigDecimal.ZERO,
                                                 BigDecimal.ZERO,
                                                 BigDecimal.ZERO,
@@ -242,10 +263,6 @@ public class LedgerService {
                                         ? transaction.getTripBalance()
                                         : BigDecimal.ZERO;
 
-                        /*
-                         * Billed =
-                         * Total Amount - Diesel Amount - Advance
-                         */
                         BigDecimal billedAmount = totalAmount
                                         .subtract(dieselAmount)
                                         .subtract(advance);
@@ -259,9 +276,6 @@ public class LedgerService {
                                                         .add(tripBalance));
                 }
 
-                /*
-                 * Owner-wise payments
-                 */
                 for (PaymentTransaction payment : payments) {
 
                         if (payment.getOwner() == null) {
@@ -274,16 +288,13 @@ public class LedgerService {
 
                         BusinessStatusResponse response = ownerMap.get(ownerId);
 
-                        /*
-                         * Important:
-                         * Payment may exist for an owner who has
-                         * no transaction in this period.
-                         */
                         if (response == null) {
 
                                 response = new BusinessStatusResponse(
                                                 ownerId,
                                                 ownerName,
+                                                companyId,
+                                                companyName,
                                                 BigDecimal.ZERO,
                                                 BigDecimal.ZERO,
                                                 BigDecimal.ZERO,
@@ -299,14 +310,9 @@ public class LedgerService {
                         response.setPaymentAmount(
                                         response.getPaymentAmount()
                                                         .add(paymentAmount));
+
                 }
 
-                /*
-                 * Calculate:
-                 *
-                 * Balance Payment =
-                 * Trip Balance - Payment Amount
-                 */
                 for (BusinessStatusResponse response : ownerMap.values()) {
 
                         BigDecimal balancePayment = response.getTripBalance()

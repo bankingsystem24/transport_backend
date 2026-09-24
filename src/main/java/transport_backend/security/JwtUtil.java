@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import io.jsonwebtoken.Claims;
 
 @Component
 public class JwtUtil {
@@ -19,12 +20,18 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username,Long userId) {
+    public String generateToken(
+            String username,
+            Long userId,
+            Long companyId) {
+
         return Jwts.builder()
                 .subject(username)
-                .claim("userId",userId)
+                .claim("userId", userId)
+                .claim("companyId", companyId)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 86400000))
+                .expiration(new Date(
+                        System.currentTimeMillis() + 86400000))
                 .signWith(getKey())
                 .compact();
     }
@@ -38,13 +45,26 @@ public class JwtUtil {
                 .getSubject();
     }
 
-public Long extractUserId(String token) {
+    public Long extractUserId(String token) {
+        return Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload()
+                .get("userId", Long.class);
+    }
+
+    public Long extractCompanyId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("companyId", Long.class);
+    }
+
+    private Claims extractAllClaims(String token) {
     return Jwts.parser()
             .verifyWith(getKey())
             .build()
             .parseSignedClaims(token)
-            .getPayload()
-            .get("userId", Long.class);
+            .getPayload();
 }
 
     public boolean validateToken(String token) {

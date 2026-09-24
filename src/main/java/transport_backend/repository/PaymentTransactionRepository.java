@@ -12,8 +12,9 @@ import org.springframework.data.repository.query.Param;
 public interface PaymentTransactionRepository
         extends JpaRepository<PaymentTransaction, Long> {
 
-            List<PaymentTransaction> findByOwner_IdAndPaymentMonthBetween(
+            List<PaymentTransaction> findByOwner_IdAndCompany_IdAndPaymentMonthBetween(
             Long ownerId,
+            Long companyId,
             LocalDate fromDate,
             LocalDate toDate
     );
@@ -22,11 +23,15 @@ public interface PaymentTransactionRepository
         SELECT p
         FROM PaymentTransaction p
         LEFT JOIN FETCH p.owner
-        WHERE p.paymentMonth BETWEEN :fromDate AND :toDate
+        WHERE p.paymentMonth BETWEEN :fromDate AND :toDate AND p.company.id = :companyId
         ORDER BY p.owner.id
     """)
     List<PaymentTransaction> findBusinessStatusPayments(
+            @Param("companyId") Long companyId,
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate
     );
+
+    List<PaymentTransaction> findByCompanyId(Long companyId);
+    
 }

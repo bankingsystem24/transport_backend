@@ -56,6 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String username = jwtUtil.extractUsername(token);
             Long userId = jwtUtil.extractUserId(token);
+            Long companyId = jwtUtil.extractCompanyId(token);
 
             User user = userRepository
                     .findByUsername(username)
@@ -83,14 +84,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             List.of(authority)
                     );
 
-            authentication.setDetails(userId);
+            authentication.setDetails(
+                    new JwtAuthenticationDetails(
+                            userId,
+                            companyId
+                    )
+            );
 
             SecurityContextHolder
                     .getContext()
                     .setAuthentication(authentication);
 
         } catch (Exception e) {
-
+            // Invalid JWT
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
