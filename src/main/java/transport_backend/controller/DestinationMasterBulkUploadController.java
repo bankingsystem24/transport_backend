@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import transport_backend.dto.BulkUploadResponse;
+import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.DestinationMasterBulkUploadService;
 
 @RestController
@@ -26,7 +27,11 @@ public class DestinationMasterBulkUploadController {
             @RequestParam("file") MultipartFile file,
             Authentication authentication) {
 
-        Long userId = (Long) authentication.getDetails();
+        JwtAuthenticationDetails details =
+        (JwtAuthenticationDetails) authentication.getDetails();
+
+
+        Long userId = (Long) details.getUserId();
 
         BulkUploadResponse response =
                 bulkUploadService.uploadDestinations(file, userId);
