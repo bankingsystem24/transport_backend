@@ -94,6 +94,12 @@ public class TransportTransaction {
     @Column(name = "total_amount", precision = 15, scale = 2)
     private BigDecimal totalAmount;
 
+    @Column(name = "profit_rate", precision = 15, scale = 2)
+    private BigDecimal profitRate;
+
+    @Column(name = "profit_amount", precision = 15, scale = 2)
+    private BigDecimal profitAmount;
+
     @Column(name = "jumbo_rate", precision = 15, scale = 2)
     private BigDecimal jumboRate;
 
@@ -436,5 +442,21 @@ public class TransportTransaction {
 
     public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public BigDecimal getProfitRate() {
+        return profitRate;
+    }
+
+    public void setProfitRate(BigDecimal profitRate) {
+        this.profitRate = profitRate;
+    }
+
+    public BigDecimal getProfitAmount() {
+        return profitAmount;
+    }
+
+    public void setProfitAmount(BigDecimal profitAmount) {
+        this.profitAmount = profitAmount;
     }
 }
