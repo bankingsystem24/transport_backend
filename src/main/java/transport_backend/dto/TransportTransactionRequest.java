@@ -44,6 +44,10 @@ public class TransportTransactionRequest {
     private BigDecimal shortage;
 
     private BigDecimal ownerRate;
+    private BigDecimal companyRate;
+    private BigDecimal profitRate;
+    private BigDecimal profitAmount;
+
 
     private BigDecimal totalAmount;
 
@@ -73,9 +77,9 @@ public class TransportTransactionRequest {
 
     private Long createdById;
 
-private String vehicleName;
-private String partyName;
-private String destinationName;
+    private String vehicleName;
+    private String partyName;
+    private String destinationName;
 
     public TransportTransactionRequest() {
     }
@@ -359,4 +363,30 @@ private String destinationName;
     public void setDestinationName(String destinationName) {
         this.destinationName = destinationName;
     }
+
+    public BigDecimal getCompanyRate() {
+        return companyRate;
+    }
+
+    public void setCompanyRate (BigDecimal companyRate) {
+        this.companyRate = companyRate;
+    }
+
+    public BigDecimal getProfitRate() {
+        return profitRate;
+    }
+
+    public void setProfitRate (BigDecimal profitRate) {
+        this.profitRate = profitRate;
+    }
+
+    public BigDecimal getProfitAmount() {
+        return profitAmount;
+    }
+
+    public void setProfitAmount (BigDecimal profitAmount) {
+        this.profitAmount = profitAmount;
+    }   
+    
+
 }

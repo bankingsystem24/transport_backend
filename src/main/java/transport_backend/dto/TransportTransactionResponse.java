@@ -44,6 +44,9 @@ public class TransportTransactionResponse {
 
     private BigDecimal shortage;
     private BigDecimal ownerRate;
+    private BigDecimal companyRate;
+    private BigDecimal profitRate;
+    private BigDecimal profitAmount;
     private BigDecimal totalAmount;
     private BigDecimal jumboRate;
     private BigDecimal tonMt;
@@ -401,4 +404,29 @@ public class TransportTransactionResponse {
     public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
+
+        public BigDecimal getCompanyRate() {
+        return companyRate;
+    }
+
+    public void setCompanyRate (BigDecimal companyRate) {
+        this.companyRate = companyRate;
+    }
+
+    public BigDecimal getProfitRate() {
+        return profitRate;
+    }
+
+    public void setProfitRate (BigDecimal profitRate) {
+        this.profitRate = profitRate;
+    }
+
+    public BigDecimal getProfitAmount() {
+        return profitAmount;
+    }
+
+    public void setProfitAmount (BigDecimal profitAmount) {
+        this.profitAmount = profitAmount;
+    }   
+
 }
