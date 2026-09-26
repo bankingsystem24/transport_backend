@@ -51,7 +51,10 @@ public class SecurityConfig {
                 "http://localhost:3000",
                 "http://localhost:5173",
                 "http://127.0.0.1:3000",
-                "http://127.0.0.1:5173"
+                "http://127.0.0.1:5173",
+                "http://3.6.219.61",
+                "http://coopmember.in",
+                "http://localhost"
         ));
 
         // HTTP methods
