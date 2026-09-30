@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import transport_backend.dto.PaymentTransactionRequest;
 import transport_backend.dto.PaymentTransactionResponse;
+import transport_backend.entity.CompanyMaster;
 import transport_backend.entity.OwnerMaster;
 import transport_backend.entity.PaymentTransaction;
 import transport_backend.entity.User;
+import transport_backend.repository.CompanyMasterRepository;
 import transport_backend.repository.OwnerMasterRepository;
 import transport_backend.repository.PaymentTransactionRepository;
 import transport_backend.repository.UserRepository;
@@ -24,17 +26,20 @@ public class PaymentTransactionService {
         private final OwnerMasterRepository ownerMasterRepository;
         private final UserRepository userRepository;
         private final JwtUtil jwtUtil;
+        private final CompanyMasterRepository companyMasterRepository;
 
         public PaymentTransactionService(
                         PaymentTransactionRepository paymentTransactionRepository,
                         OwnerMasterRepository ownerMasterRepository,
                         UserRepository userRepository,
-                        JwtUtil jwtUtil) {
+                        JwtUtil jwtUtil,
+                        CompanyMasterRepository companyMasterRepository) {
 
                 this.paymentTransactionRepository = paymentTransactionRepository;
                 this.ownerMasterRepository = ownerMasterRepository;
                 this.userRepository = userRepository;
                 this.jwtUtil = jwtUtil;
+                this.companyMasterRepository = companyMasterRepository;
         }
 
         // =========================================================
@@ -44,7 +49,7 @@ public class PaymentTransactionService {
         @Transactional
         public PaymentTransactionResponse create(
                         PaymentTransactionRequest request,
-                        String token) {
+                        String token,Long companyId) {
 
                 OwnerMaster owner = ownerMasterRepository
                                 .findById(request.getOwnerId())
@@ -59,6 +64,9 @@ public class PaymentTransactionService {
                                 .orElseThrow(() -> new RuntimeException(
                                                 "User not found with id: " + userId));
 
+                CompanyMaster company = companyMasterRepository.findById(companyId).orElseThrow(() ->
+                    new RuntimeException("Company not found with id: " + companyId));
+
                 PaymentTransaction payment = new PaymentTransaction();
 
                 payment.setPaymentDate(request.getPaymentDate());
@@ -66,6 +74,8 @@ public class PaymentTransactionService {
                 payment.setPaymentMonth(request.getPaymentMonth());
 
                 payment.setOwner(owner);
+                
+                payment.setCompany(company);
 
                 payment.setBankName(request.getBankName());
 

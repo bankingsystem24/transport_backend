@@ -955,6 +955,8 @@ private TransportTransactionReportResponse convertToReportResponse(
 
     response.setPaymentDate(transaction.getPaymentDate());
     response.setTripBalance(transaction.getTripBalance());
+    response.setProfitRate(transaction.getProfitRate());
+    response.setProfitAmount(transaction.getProfitAmount());
 
     // Created By
     if (transaction.getCreatedBy() != null) {

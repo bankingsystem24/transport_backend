@@ -65,6 +65,8 @@ public class TransportTransactionReportResponse {
     private String createdByName;
 
     private LocalDateTime createdDate;
+    private BigDecimal profitRate;
+    private BigDecimal profitAmount;
 
     public TransportTransactionReportResponse() {
     }
@@ -395,5 +397,22 @@ public class TransportTransactionReportResponse {
 
     public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
+    }
+
+    public BigDecimal getProfitRate() {
+        return profitRate;
+    }
+
+    public void setProfitRate(BigDecimal profitRate) {
+        this.profitRate = profitRate;
+    }
+
+    
+    public BigDecimal getProfitAmount() {
+        return profitAmount;
+    }
+
+    public void setProfitAmount(BigDecimal profitAmount) {
+        this.profitAmount = profitAmount;
     }
 }

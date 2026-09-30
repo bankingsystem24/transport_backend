@@ -32,7 +32,8 @@ public class PaymentTransactionController {
     @PostMapping
     public ResponseEntity<PaymentTransactionResponse> create(
             @Valid @RequestBody PaymentTransactionRequest request,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest,
+            Authentication authentication) {
 
         String authHeader = httpRequest.getHeader("Authorization");
 
@@ -40,11 +41,16 @@ public class PaymentTransactionController {
             throw new RuntimeException("Authorization token is missing");
         }
 
+        JwtAuthenticationDetails details =
+            (JwtAuthenticationDetails) authentication.getDetails();
+
+        Long companyId = details.getCompanyId();
+
         String token = authHeader.substring(7);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(service.create(request, token));
+                .body(service.create(request, token,companyId));
     }
 
 
