@@ -62,4 +62,19 @@ public interface CompanyDestinationRateRepository
         Long destinationId,
         LocalDate fromDate,
         LocalDate fromDate2);
+
+
+@Query("""
+    SELECT r
+    FROM CompanyDestinationRate r
+    WHERE r.product.id = :productId
+      AND r.destination.id = :destinationId
+      AND r.fromDate <= :effectiveDate
+      AND r.toDate >= :effectiveDate
+""")
+Optional<CompanyDestinationRate> findApplicableRate(
+        @Param("productId") Long productId,
+        @Param("destinationId") Long destinationId,
+        @Param("effectiveDate") LocalDate effectiveDate
+);
 }

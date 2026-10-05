@@ -25,145 +25,138 @@ import java.util.Arrays;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(
-            JwtAuthenticationFilter jwtAuthenticationFilter) {
+        public SecurityConfig(
+                        JwtAuthenticationFilter jwtAuthenticationFilter) {
 
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+                this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    // =========================
-    // CORS CONFIGURATION
-    // =========================
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+        // =========================
+        // CORS CONFIGURATION
+        // =========================
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+                CorsConfiguration configuration = new CorsConfiguration();
 
-        // Frontend URLs
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:5173",
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:5173",
-                "http://3.6.219.61",
-                "http://coopmember.in",
-                "http://localhost"
-        ));
+                // Frontend URLs
+                configuration.setAllowedOrigins(Arrays.asList(
+                                "http://localhost:3000",
+                                "http://localhost:5173",
+                                "http://127.0.0.1:3000",
+                                "http://127.0.0.1:5173",
+                                "http://3.6.219.61",
+                                "http://coopmember.in:90",
+                                "http://localhost"));
 
-        // HTTP methods
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET",
-                "POST",
-                "PUT",
-                "DELETE",
-                "PATCH",
-                "OPTIONS"
-        ));
+                // HTTP methods
+                configuration.setAllowedMethods(Arrays.asList(
+                                "GET",
+                                "POST",
+                                "PUT",
+                                "DELETE",
+                                "PATCH",
+                                "OPTIONS"));
 
-        // Request headers
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "X-Requested-With"
-        ));
+                // Request headers
+                configuration.setAllowedHeaders(Arrays.asList(
+                                "Authorization",
+                                "Content-Type",
+                                "Accept",
+                                "Origin",
+                                "X-Requested-With"));
 
-        // Allow Authorization header / cookies if required
-        configuration.setAllowCredentials(true);
+                // Allow Authorization header / cookies if required
+                configuration.setAllowCredentials(true);
 
-        // Expose headers if required
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization"
-        ));
+                // Expose headers if required
+                configuration.setExposedHeaders(Arrays.asList(
+                                "Authorization"));
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+                source.registerCorsConfiguration("/**", configuration);
 
-        return source;
-    }
+                return source;
+        }
 
-    // =========================
-    // SECURITY
-    // =========================
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http) throws Exception {
+        // =========================
+        // SECURITY
+        // =========================
+        @Bean
+        public SecurityFilterChain securityFilterChain(
+                        HttpSecurity http) throws Exception {
 
-        http
-                .csrf(csrf -> csrf.disable())
+                http
+                                .csrf(csrf -> csrf.disable())
 
-                // ENABLE CORS
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                                // ENABLE CORS
+                                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS))
+                                .sessionManagement(session -> session.sessionCreationPolicy(
+                                                SessionCreationPolicy.STATELESS))
 
-                .exceptionHandling(exception -> exception
+                                .exceptionHandling(exception -> exception
 
-                        .authenticationEntryPoint(
-                                (request, response, authException) -> {
+                                                .authenticationEntryPoint(
+                                                                (request, response, authException) -> {
 
-                                    response.setStatus(
-                                            HttpServletResponse.SC_UNAUTHORIZED);
+                                                                        response.setStatus(
+                                                                                        HttpServletResponse.SC_UNAUTHORIZED);
 
-                                    response.setContentType(
-                                            "application/json");
+                                                                        response.setContentType(
+                                                                                        "application/json");
 
-                                    response.getWriter().write(
-                                            "{\"message\":\"Authentication required\"}");
-                                })
+                                                                        response.getWriter().write(
+                                                                                        "{\"message\":\"Authentication required\"}");
+                                                                })
 
-                        .accessDeniedHandler(
-                                (request, response, accessDeniedException) -> {
+                                                .accessDeniedHandler(
+                                                                (request, response, accessDeniedException) -> {
 
-                                    response.setStatus(
-                                            HttpServletResponse.SC_FORBIDDEN);
+                                                                        response.setStatus(
+                                                                                        HttpServletResponse.SC_FORBIDDEN);
 
-                                    response.setContentType(
-                                            "application/json");
+                                                                        response.setContentType(
+                                                                                        "application/json");
 
-                                    response.getWriter().write(
-                                            "{\"message\":\"Access denied\"}");
-                                }))
+                                                                        response.getWriter().write(
+                                                                                        "{\"message\":\"Access denied\"}");
+                                                                }))
 
-                .authorizeHttpRequests(auth -> auth
+                                .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(
-                                "/api/auth/login",
-                                "/api/auth/forgot-password",
-                                "/api/auth/verify-otp",
-                                "/api/auth/reset-password",
-                                "/api/company-master"
-                        ).permitAll()
+                                                .requestMatchers(
+                                                                "/api/auth/login",
+                                                                "/api/auth/forgot-password",
+                                                                "/api/auth/verify-otp",
+                                                                "/api/auth/reset-password",
+                                                                "/api/company-master")
+                                                .permitAll()
 
-                        // Allow browser preflight request
-                        .requestMatchers(
-                                org.springframework.http.HttpMethod.OPTIONS,
-                                "/**"
-                        ).permitAll()
+                                                // Allow browser preflight request
+                                                .requestMatchers(
+                                                                org.springframework.http.HttpMethod.OPTIONS,
+                                                                "/**")
+                                                .permitAll()
 
-                        .anyRequest().authenticated()
-                )
+                                                .anyRequest().authenticated())
 
-                .formLogin(form -> form.disable())
+                                .formLogin(form -> form.disable())
 
-                .httpBasic(basic -> basic.disable())
+                                .httpBasic(basic -> basic.disable())
 
-                .addFilterBefore(
-                        jwtAuthenticationFilter,
-                        UsernamePasswordAuthenticationFilter.class);
+                                .addFilterBefore(
+                                                jwtAuthenticationFilter,
+                                                UsernamePasswordAuthenticationFilter.class);
 
-        return http.build();
-    }
+                return http.build();
+        }
 }

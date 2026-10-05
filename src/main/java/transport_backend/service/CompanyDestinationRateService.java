@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import transport_backend.dto.CompanyDestinationRateRequest;
 import transport_backend.dto.CompanyDestinationRateResponse;
+import transport_backend.dto.CompanyDestinationRateRevisionItem;
+import transport_backend.dto.CompanyDestinationRateRevisionRequest;
 import transport_backend.entity.CompanyDestinationRate;
 import transport_backend.entity.DestinationMaster;
 import transport_backend.entity.ProductMaster;
@@ -265,5 +267,69 @@ public class CompanyDestinationRateService {
 
                 return response;
         }
+
+        @Transactional
+public void reviseRates(
+        CompanyDestinationRateRevisionRequest request) {
+
+    LocalDate effectiveDate = request.getEffectiveDate();
+
+    LocalDate previousDate = effectiveDate.minusDays(1);
+
+    LocalDate newToDate = effectiveDate
+            .plusYears(10)
+            .minusDays(1);
+
+    for (CompanyDestinationRateRevisionItem item : request.getRates()) {
+
+        Long productId = item.getProductId();
+        Long destinationId = item.getDestinationId();
+
+        ProductMaster product = productRepository
+                .findById(productId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Product not found with id: "
+                                        + productId));
+
+        DestinationMaster destination = destinationRepository
+                .findById(destinationId)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Destination not found with id: "
+                                        + destinationId));
+
+        CompanyDestinationRate existing =
+                rateRepository.findApplicableRate(
+                        productId,
+                        destinationId,
+                        effectiveDate
+                ).orElse(null);
+
+        /*
+         * Close existing rate
+         */
+        if (existing != null) {
+
+            existing.setToDate(previousDate);
+
+            rateRepository.save(existing);
+        }
+
+        /*
+         * Create new rate
+         */
+        CompanyDestinationRate newRate =
+                new CompanyDestinationRate();
+
+        newRate.setProduct(product);
+        newRate.setDestination(destination);
+        newRate.setFromDate(effectiveDate);
+        newRate.setToDate(newToDate);
+        newRate.setCompanyRate(item.getCompanyRate());
+
+        rateRepository.save(newRate);
+    }
+}
 
 }

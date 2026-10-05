@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.*;
 
 import transport_backend.dto.CompanyDestinationRateRequest;
 import transport_backend.dto.CompanyDestinationRateResponse;
+import transport_backend.dto.CompanyDestinationRateRevisionRequest;
 import transport_backend.service.CompanyDestinationRateService;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/company-destination-rates")
@@ -25,10 +27,6 @@ public class CompanyDestinationRateController {
         this.rateService = rateService;
     }
 
-    // =========================================================
-    // CREATE
-    // =========================================================
-
     @PostMapping
     public ResponseEntity<CompanyDestinationRateResponse> create(
             @Valid @RequestBody CompanyDestinationRateRequest request) {
@@ -38,10 +36,6 @@ public class CompanyDestinationRateController {
                 .body(rateService.create(request));
     }
 
-    // =========================================================
-    // GET ALL
-    // =========================================================
-
     @GetMapping
     public ResponseEntity<List<CompanyDestinationRateResponse>> getAll() {
 
@@ -49,10 +43,6 @@ public class CompanyDestinationRateController {
                 rateService.getAll()
         );
     }
-
-    // =========================================================
-    // GET BY ID
-    // =========================================================
 
     @GetMapping("/{id}")
     public ResponseEntity<CompanyDestinationRateResponse> getById(
@@ -63,10 +53,6 @@ public class CompanyDestinationRateController {
         );
     }
 
-    // =========================================================
-    // UPDATE
-    // =========================================================
-
     @PutMapping("/{id}")
     public ResponseEntity<CompanyDestinationRateResponse> update(
             @PathVariable Long id,
@@ -76,10 +62,6 @@ public class CompanyDestinationRateController {
                 rateService.update(id, request)
         );
     }
-
-    // =========================================================
-    // DELETE
-    // =========================================================
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
@@ -106,6 +88,20 @@ public class CompanyDestinationRateController {
                         productId,
                         destinationId,
                         fromDate
+                )
+        );
+        }
+
+        @PostMapping("/revise")
+        public ResponseEntity<?> reviseRates(
+                @Valid @RequestBody CompanyDestinationRateRevisionRequest request) {
+
+        rateService.reviseRates(request);
+
+        return ResponseEntity.ok(
+                Map.of(
+                        "message",
+                        "Company destination rates updated successfully"
                 )
         );
         }
