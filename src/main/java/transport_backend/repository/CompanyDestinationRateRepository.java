@@ -77,4 +77,11 @@ Optional<CompanyDestinationRate> findApplicableRate(
         @Param("destinationId") Long destinationId,
         @Param("effectiveDate") LocalDate effectiveDate
 );
+
+boolean existsByProduct_IdAndDestination_IdAndFromDate(
+        Long productId,
+        Long destinationId,
+        LocalDate fromDate
+);
+
 }

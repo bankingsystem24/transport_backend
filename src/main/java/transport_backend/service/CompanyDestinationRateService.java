@@ -16,7 +16,9 @@ import transport_backend.repository.DestinationMasterRepository;
 import transport_backend.repository.ProductMasterRepository;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -269,67 +271,106 @@ public class CompanyDestinationRateService {
         }
 
         @Transactional
-public void reviseRates(
-        CompanyDestinationRateRevisionRequest request) {
+        public void reviseRates(
+                CompanyDestinationRateRevisionRequest request) {
 
-    LocalDate effectiveDate = request.getEffectiveDate();
+        LocalDate effectiveDate = request.getEffectiveDate();
 
-    LocalDate previousDate = effectiveDate.minusDays(1);
+        LocalDate previousDate = effectiveDate.minusDays(1);
 
-    LocalDate newToDate = effectiveDate
-            .plusYears(10)
-            .minusDays(1);
+        LocalDate newToDate = effectiveDate
+                .plusYears(10)
+                .minusDays(1);
 
-    for (CompanyDestinationRateRevisionItem item : request.getRates()) {
+        Set<String> requestKeys = new HashSet<>();
 
-        Long productId = item.getProductId();
-        Long destinationId = item.getDestinationId();
+        for (CompanyDestinationRateRevisionItem item : request.getRates()) {
 
-        ProductMaster product = productRepository
-                .findById(productId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Product not found with id: "
-                                        + productId));
+                Long productId = item.getProductId();
+                Long destinationId = item.getDestinationId();
 
-        DestinationMaster destination = destinationRepository
-                .findById(destinationId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Destination not found with id: "
-                                        + destinationId));
+                /*
+                * Prevent duplicate product + destination
+                * in the same request
+                */
+                String requestKey = productId + "_" + destinationId;
 
-        CompanyDestinationRate existing =
-                rateRepository.findApplicableRate(
-                        productId,
-                        destinationId,
-                        effectiveDate
-                ).orElse(null);
+                if (!requestKeys.add(requestKey)) {
+                throw new RuntimeException(
+                        "Duplicate rate in request for productId: "
+                                + productId
+                                + " and destinationId: "
+                                + destinationId);
+                }
 
-        /*
-         * Close existing rate
-         */
-        if (existing != null) {
+                ProductMaster product = productRepository
+                        .findById(productId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Product not found with id: "
+                                                + productId));
 
-            existing.setToDate(previousDate);
+                DestinationMaster destination = destinationRepository
+                        .findById(destinationId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Destination not found with id: "
+                                                + destinationId));
 
-            rateRepository.save(existing);
+                /*
+                * Check whether a record already exists
+                * starting on the effective date.
+                */
+                boolean alreadyExists =
+                        rateRepository.existsByProduct_IdAndDestination_IdAndFromDate(
+                                productId,
+                                destinationId,
+                                effectiveDate
+                        );
+
+                if (alreadyExists) {
+                throw new RuntimeException(
+                        "Rate already exists for productId: "
+                                + productId
+                                + ", destinationId: "
+                                + destinationId
+                                + ", effectiveDate: "
+                                + effectiveDate);
+                }
+
+                /*
+                * Find current applicable rate
+                */
+                CompanyDestinationRate existing =
+                        rateRepository.findApplicableRate(
+                                productId,
+                                destinationId,
+                                effectiveDate
+                        ).orElse(null);
+
+                /*
+                * Close existing rate
+                */
+                if (existing != null) {
+
+                existing.setToDate(previousDate);
+
+                rateRepository.save(existing);
+                }
+
+                /*
+                * Create new rate
+                */
+                CompanyDestinationRate newRate =
+                        new CompanyDestinationRate();
+
+                newRate.setProduct(product);
+                newRate.setDestination(destination);
+                newRate.setFromDate(effectiveDate);
+                newRate.setToDate(newToDate);
+                newRate.setCompanyRate(item.getCompanyRate());
+
+                rateRepository.save(newRate);
         }
-
-        /*
-         * Create new rate
-         */
-        CompanyDestinationRate newRate =
-                new CompanyDestinationRate();
-
-        newRate.setProduct(product);
-        newRate.setDestination(destination);
-        newRate.setFromDate(effectiveDate);
-        newRate.setToDate(newToDate);
-        newRate.setCompanyRate(item.getCompanyRate());
-
-        rateRepository.save(newRate);
-    }
-}
-
+        }
 }
