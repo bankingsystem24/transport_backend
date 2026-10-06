@@ -57,4 +57,11 @@ public interface TransportTransactionRepository
                         @Param("toDate") LocalDate toDate);
 
         List<TransportTransaction> findByCompany_Id(Long companyId);
+
+        boolean existsByCompany_IdAndDiNoAndLrNoAndInvoiceNo(
+                Long companyId,
+                String diNo,
+                String lrNo,
+                String invoiceNo
+        );
 }

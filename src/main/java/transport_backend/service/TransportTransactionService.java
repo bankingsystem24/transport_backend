@@ -67,35 +67,54 @@ public class TransportTransactionService {
                 this.userRepository = userRepository;
         }
 
-        // =========================================================
-        // CREATE
-        // =========================================================
-
+        @Transactional
         public TransportTransactionResponse create(
-                        TransportTransactionRequest request) {
+                TransportTransactionRequest request) {
 
-                TransportTransaction transaction = new TransportTransaction();
+        String diNo = request.getDiNo() != null
+                ? request.getDiNo().trim()
+                : null;
 
-                mapRequestToEntity(transaction, request);
+        String lrNo = request.getLrNo() != null
+                ? request.getLrNo().trim()
+                : null;
 
-                transaction.setCreatedDate(LocalDateTime.now());
+        String invoiceNo = request.getInvoiceNo() != null
+                ? request.getInvoiceNo().trim()
+                : null;
 
-                TransportTransaction saved = transactionRepository.save(transaction);
+        if (transactionRepository.existsByCompany_IdAndDiNoAndLrNoAndInvoiceNo(
+                request.getCompanyId(),
+                diNo,
+                lrNo,
+                invoiceNo)) {
 
-                // CREATE LOG
-                saveLog(
-                                saved,
-                                "CREATE",
-                                null,
-                                createSnapshot(saved),
-                                getUser(request.getCreatedById()));
-
-                return mapToResponse(saved);
+        throw new RuntimeException(
+                "Transaction already exists for "
+                        + "DI No: " + diNo
+                        + ", LR No: " + lrNo
+                        + ", Invoice No: " + invoiceNo);
         }
 
-        // =========================================================
-        // GET BY ID
-        // =========================================================
+        TransportTransaction transaction =
+                new TransportTransaction();
+
+        mapRequestToEntity(transaction, request);
+
+        transaction.setCreatedDate(LocalDateTime.now());
+
+        TransportTransaction saved =
+                transactionRepository.save(transaction);
+
+        saveLog(
+                saved,
+                "CREATE",
+                null,
+                createSnapshot(saved),
+                getUser(request.getCreatedById()));
+
+        return mapToResponse(saved);
+        }
 
         @Transactional(readOnly = true)
         public TransportTransactionResponse getById(Long id) {
@@ -108,23 +127,15 @@ public class TransportTransactionService {
                 return mapToResponse(transaction);
         }
 
-        // =========================================================
-        // GET ALL
-        // =========================================================
+        @Transactional(readOnly = true)
+        public List<TransportTransactionResponse> getAll(Long companyId) {
 
-@Transactional(readOnly = true)
-public List<TransportTransactionResponse> getAll(Long companyId) {
-
-    return transactionRepository
-            .findByCompany_Id(companyId)
-            .stream()
-            .map(this::mapToResponse)
-            .toList();
-}
-
-        // =========================================================
-        // UPDATE
-        // =========================================================
+        return transactionRepository
+                .findByCompany_Id(companyId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
+        }
 
         public TransportTransactionResponse update(
                         Long id,
@@ -135,18 +146,14 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                                                 "Transport transaction not found with id: "
                                                                 + id));
 
-                // Snapshot BEFORE update
                 String oldData = createSnapshot(transaction);
 
-                // Update entity
                 mapRequestToEntity(transaction, request);
 
                 TransportTransaction updated = transactionRepository.save(transaction);
 
-                // Snapshot AFTER update
                 String newData = createSnapshot(updated);
 
-                // UPDATE LOG
                 saveLog(
                                 updated,
                                 "UPDATE",
@@ -156,10 +163,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 return mapToResponse(updated);
         }
-
-        // =========================================================
-        // DELETE
-        // =========================================================
 
         public void delete(Long id) {
 
@@ -171,17 +174,9 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 transactionRepository.delete(transaction);
         }
 
-        // =========================================================
-        // MAP REQUEST TO ENTITY
-        // =========================================================
-
         private void mapRequestToEntity(
                         TransportTransaction transaction,
                         TransportTransactionRequest request) {
-
-                // -----------------------------------------------------
-                // PRODUCT
-                // -----------------------------------------------------
 
                 ProductMaster product = productRepository.findById(request.getProductId())
                                 .orElseThrow(() -> new RuntimeException(
@@ -190,20 +185,12 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 transaction.setProduct(product);
 
-                // -----------------------------------------------------
-                // COMPANY
-                // -----------------------------------------------------
-
                 CompanyMaster company = companyRepository.findById(request.getCompanyId())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Company not found with id: "
                                                                 + request.getCompanyId()));
 
                 transaction.setCompany(company);
-
-                // -----------------------------------------------------
-                // OWNER
-                // -----------------------------------------------------
 
                 if (request.getOwnerId() != null) {
 
@@ -219,10 +206,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                         transaction.setOwner(null);
                 }
 
-                // -----------------------------------------------------
-                // VEHICLE
-                // -----------------------------------------------------
-
                 if (request.getVehicleId() != null) {
 
                         VehicleMaster vehicle = vehicleRepository.findById(request.getVehicleId())
@@ -237,10 +220,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                         transaction.setVehicle(null);
                 }
 
-                // -----------------------------------------------------
-                // PARTY
-                // -----------------------------------------------------
-
                 if (request.getPartyId() != null) {
 
                         PartyMaster party = partyRepository.findById(request.getPartyId())
@@ -254,10 +233,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                         transaction.setParty(null);
                 }
-
-                // -----------------------------------------------------
-                // DESTINATION
-                // -----------------------------------------------------
 
                 if (request.getDestinationId() != null) {
 
@@ -274,10 +249,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                         transaction.setDestination(null);
                 }
 
-                // -----------------------------------------------------
-                // NAMES
-                // -----------------------------------------------------
-
                 transaction.setVehicleName(
                                 request.getVehicleName());
 
@@ -287,25 +258,13 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 transaction.setDestinationName(
                                 request.getDestinationName());
 
-                // -----------------------------------------------------
-                // DI / LR
-                // -----------------------------------------------------
-
                 transaction.setDiDate(request.getDiDate());
                 transaction.setDiNo(request.getDiNo());
                 transaction.setLrNo(request.getLrNo());
 
-                // -----------------------------------------------------
-                // INVOICE
-                // -----------------------------------------------------
-
                 transaction.setInvoiceNo(request.getInvoiceNo());
                 transaction.setInvoiceNo1(request.getInvoiceNo1());
                 transaction.setInvoiceNo2(request.getInvoiceNo2());
-
-                // -----------------------------------------------------
-                // WEIGHT
-                // -----------------------------------------------------
 
                 transaction.setLoadingWt(request.getLoadingWt());
                 transaction.setUnloadingWt(request.getUnloadingWt());
@@ -318,10 +277,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 transaction.setShortage(
                                 request.getShortage());
-
-                // -----------------------------------------------------
-                // RATES
-                // -----------------------------------------------------
 
                 transaction.setOwnerRate(
                                 request.getOwnerRate());
@@ -338,10 +293,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 transaction.setOtherPay(
                                 request.getOtherPay());
 
-                // -----------------------------------------------------
-                // DIESEL
-                // -----------------------------------------------------
-
                 transaction.setDieselRqNo(
                                 request.getDieselRqNo());
 
@@ -357,10 +308,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 transaction.setDieselAmount(
                                 request.getDieselAmount());
 
-                // -----------------------------------------------------
-                // PAYMENT
-                // -----------------------------------------------------
-
                 transaction.setAdvance(
                                 request.getAdvance());
 
@@ -373,11 +320,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 transaction.setTripBalance(
                                 request.getTripBalance());
 
-                // -----------------------------------------------------
-                // CREATED BY
-                // Only set during CREATE
-                // -----------------------------------------------------
-
                 if (transaction.getId() == null
                                 && request.getCreatedById() != null) {
 
@@ -386,10 +328,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                         transaction.setCreatedBy(user);
                 }
         }
-
-        // =========================================================
-        // GET USER
-        // =========================================================
 
         private User getUser(Long userId) {
 
@@ -401,10 +339,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                                 .orElseThrow(() -> new RuntimeException(
                                                 "User not found with id: " + userId));
         }
-
-        // =========================================================
-        // SAVE LOG
-        // =========================================================
 
         private void saveLog(
                         TransportTransaction transaction,
@@ -425,10 +359,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 logRepository.save(log);
         }
-
-        // =========================================================
-        // CREATE SNAPSHOT
-        // =========================================================
 
         private String createSnapshot(
                         TransportTransaction transaction) {
@@ -575,11 +505,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                                 + "}";
         }
-
-        // =========================================================
-        // JSON NUMBER / VALUE
-        // =========================================================
-
         private String value(Object value) {
 
                 if (value == null) {
@@ -588,10 +513,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 return value.toString();
         }
-
-        // =========================================================
-        // JSON STRING / TEXT
-        // =========================================================
 
         private String text(Object value) {
 
@@ -609,20 +530,12 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 return "\"" + text + "\"";
         }
 
-        // =========================================================
-        // MAP ENTITY TO RESPONSE
-        // =========================================================
-
         private TransportTransactionResponse mapToResponse(
                         TransportTransaction transaction) {
 
                 TransportTransactionResponse response = new TransportTransactionResponse();
 
                 response.setId(transaction.getId());
-
-                // -----------------------------------------------------
-                // PRODUCT
-                // -----------------------------------------------------
 
                 if (transaction.getProduct() != null) {
 
@@ -633,10 +546,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                                         transaction.getProduct().getProductName());
                 }
 
-                // -----------------------------------------------------
-                // COMPANY
-                // -----------------------------------------------------
-
                 if (transaction.getCompany() != null) {
 
                         response.setCompanyId(
@@ -645,10 +554,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                         response.setCompanyName(
                                         transaction.getCompany().getCompanyName());
                 }
-
-                // -----------------------------------------------------
-                // OWNER
-                // -----------------------------------------------------
 
                 if (transaction.getOwner() != null) {
 
@@ -659,10 +564,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                                         transaction.getOwner().getOwnerName());
                 }
 
-                // -----------------------------------------------------
-                // VEHICLE
-                // -----------------------------------------------------
-
                 if (transaction.getVehicle() != null) {
 
                         response.setVehicleId(
@@ -671,10 +572,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 response.setVehicleName(
                                 transaction.getVehicleName());
-
-                // -----------------------------------------------------
-                // PARTY
-                // -----------------------------------------------------
 
                 if (transaction.getParty() != null) {
 
@@ -690,10 +587,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                                         transaction.getPartyName());
                 }
 
-                // -----------------------------------------------------
-                // DESTINATION
-                // -----------------------------------------------------
-
                 if (transaction.getDestination() != null) {
 
                         response.setDestinationId(
@@ -708,10 +601,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                                         transaction.getDestinationName());
                 }
 
-                // -----------------------------------------------------
-                // DI / LR
-                // -----------------------------------------------------
-
                 response.setDiDate(
                                 transaction.getDiDate());
 
@@ -721,10 +610,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 response.setLrNo(
                                 transaction.getLrNo());
 
-                // -----------------------------------------------------
-                // INVOICE
-                // -----------------------------------------------------
-
                 response.setInvoiceNo(
                                 transaction.getInvoiceNo());
 
@@ -733,10 +618,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 response.setInvoiceNo2(
                                 transaction.getInvoiceNo2());
-
-                // -----------------------------------------------------
-                // WEIGHT
-                // -----------------------------------------------------
 
                 response.setLoadingWt(
                                 transaction.getLoadingWt());
@@ -752,11 +633,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 response.setShortage(
                                 transaction.getShortage());
-
-                // -----------------------------------------------------
-                // RATES
-                // -----------------------------------------------------
-
                 response.setOwnerRate(
                                 transaction.getOwnerRate());
 
@@ -771,10 +647,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 response.setOtherPay(
                                 transaction.getOtherPay());
-
-                // -----------------------------------------------------
-                // DIESEL
-                // -----------------------------------------------------
 
                 response.setDieselRqNo(
                                 transaction.getDieselRqNo());
@@ -791,10 +663,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 response.setDieselAmount(
                                 transaction.getDieselAmount());
 
-                // -----------------------------------------------------
-                // PAYMENT
-                // -----------------------------------------------------
-
                 response.setAdvance(
                                 transaction.getAdvance());
 
@@ -806,10 +674,6 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
 
                 response.setTripBalance(
                                 transaction.getTripBalance());
-
-                // -----------------------------------------------------
-                // CREATED BY
-                // -----------------------------------------------------
 
                 if (transaction.getCreatedBy() != null) {
 
@@ -823,153 +687,142 @@ public List<TransportTransactionResponse> getAll(Long companyId) {
                 return response;
         }
 
-public List<TransportTransactionReportResponse> findReport(
-        LocalDate fromDate,
-        LocalDate toDate,
-        Boolean owner,
-        Long ownerId,
-        Boolean vehicle,
-        Long vehicleId) {
+        public List<TransportTransactionReportResponse> findReport(
+                LocalDate fromDate,
+                LocalDate toDate,
+                Boolean owner,
+                Long ownerId,
+                Boolean vehicle,
+                Long vehicleId) {
 
-    if (fromDate == null || toDate == null) {
-        throw new IllegalArgumentException(
-                "From date and To date are required");
-    }
+        if (fromDate == null || toDate == null) {
+                throw new IllegalArgumentException(
+                        "From date and To date are required");
+        }
 
-    if (fromDate.isAfter(toDate)) {
-        throw new IllegalArgumentException(
-                "From date cannot be after To date");
-    }
+        if (fromDate.isAfter(toDate)) {
+                throw new IllegalArgumentException(
+                        "From date cannot be after To date");
+        }
 
-    List<TransportTransaction> transactions;
+        List<TransportTransaction> transactions;
 
-    // OWNER REPORT
-    if (Boolean.TRUE.equals(owner) && ownerId != null) {
+        if (Boolean.TRUE.equals(owner) && ownerId != null) {
 
-        transactions = transactionRepository
-                .findByDiDateBetweenAndOwner_Id(
-                        fromDate,
-                        toDate,
-                        ownerId);
+                transactions = transactionRepository
+                        .findByDiDateBetweenAndOwner_Id(
+                                fromDate,
+                                toDate,
+                                ownerId);
 
-    // VEHICLE REPORT
-    } else if (Boolean.TRUE.equals(vehicle) && vehicleId != null) {
+        } else if (Boolean.TRUE.equals(vehicle) && vehicleId != null) {
 
-        transactions = transactionRepository
-                .findByDiDateBetweenAndVehicle_Id(
-                        fromDate,
-                        toDate,
-                        vehicleId);
+                transactions = transactionRepository
+                        .findByDiDateBetweenAndVehicle_Id(
+                                fromDate,
+                                toDate,
+                                vehicleId);
 
-    // DATE-WISE REPORT
-    } else {
+        } else {
 
-        transactions = transactionRepository
-                .findByDiDateBetween(
-                        fromDate,
-                        toDate);
-    }
+                transactions = transactionRepository
+                        .findByDiDateBetween(
+                                fromDate,
+                                toDate);
+        }
 
-    return transactions.stream()
-            .map(this::convertToReportResponse)
-            .toList();
-}
+        return transactions.stream()
+                .map(this::convertToReportResponse)
+                .toList();
+        }
 
 
-private TransportTransactionReportResponse convertToReportResponse(
-        TransportTransaction transaction) {
+        private TransportTransactionReportResponse convertToReportResponse(
+                TransportTransaction transaction) {
 
-    TransportTransactionReportResponse response =
-            new TransportTransactionReportResponse();
+        TransportTransactionReportResponse response =
+                new TransportTransactionReportResponse();
 
-    response.setId(transaction.getId());
+        response.setId(transaction.getId());
 
-    // Product
-    if (transaction.getProduct() != null) {
-        response.setProductId(transaction.getProduct().getId());
-        response.setProductName(transaction.getProduct().getProductName());
-    }
+        if (transaction.getProduct() != null) {
+                response.setProductId(transaction.getProduct().getId());
+                response.setProductName(transaction.getProduct().getProductName());
+        }
 
-    // Company
-    if (transaction.getCompany() != null) {
-        response.setCompanyId(transaction.getCompany().getId());
-        response.setCompanyName(transaction.getCompany().getCompanyName());
-    }
+        if (transaction.getCompany() != null) {
+                response.setCompanyId(transaction.getCompany().getId());
+                response.setCompanyName(transaction.getCompany().getCompanyName());
+        }
 
-    // Owner
-    if (transaction.getOwner() != null) {
-        response.setOwnerId(transaction.getOwner().getId());
-        response.setOwnerName(transaction.getOwner().getOwnerName());
-    }
+        if (transaction.getOwner() != null) {
+                response.setOwnerId(transaction.getOwner().getId());
+                response.setOwnerName(transaction.getOwner().getOwnerName());
+        }
 
-    // Vehicle
-    if (transaction.getVehicle() != null) {
-        response.setVehicleId(transaction.getVehicle().getId());
-        response.setVehicleName(transaction.getVehicleName());
-    }
+        if (transaction.getVehicle() != null) {
+                response.setVehicleId(transaction.getVehicle().getId());
+                response.setVehicleName(transaction.getVehicleName());
+        }
 
-    // Party
-    if (transaction.getParty() != null) {
-        response.setPartyId(transaction.getParty().getId());
-        response.setPartyName(transaction.getPartyName());
-    }
+        if (transaction.getParty() != null) {
+                response.setPartyId(transaction.getParty().getId());
+                response.setPartyName(transaction.getPartyName());
+        }
 
-    // Destination
-    if (transaction.getDestination() != null) {
-        response.setDestinationId(transaction.getDestination().getId());
-        response.setDestinationName(
-                transaction.getDestinationName());
-    }
+        if (transaction.getDestination() != null) {
+                response.setDestinationId(transaction.getDestination().getId());
+                response.setDestinationName(
+                        transaction.getDestinationName());
+        }
 
-    response.setDiDate(transaction.getDiDate());
-    response.setDiNo(transaction.getDiNo());
+        response.setDiDate(transaction.getDiDate());
+        response.setDiNo(transaction.getDiNo());
 
-    response.setLrNo(transaction.getLrNo());
+        response.setLrNo(transaction.getLrNo());
 
-    response.setInvoiceNo(transaction.getInvoiceNo());
-    response.setInvoiceNo1(transaction.getInvoiceNo1());
-    response.setInvoiceNo2(transaction.getInvoiceNo2());
+        response.setInvoiceNo(transaction.getInvoiceNo());
+        response.setInvoiceNo1(transaction.getInvoiceNo1());
+        response.setInvoiceNo2(transaction.getInvoiceNo2());
 
-    response.setLoadingWt(transaction.getLoadingWt());
-    response.setUnloadingWt(transaction.getUnloadingWt());
+        response.setLoadingWt(transaction.getLoadingWt());
+        response.setUnloadingWt(transaction.getUnloadingWt());
 
-    response.setLoadingDate(transaction.getLoadingDate());
-    response.setUnloadingDate(transaction.getUnloadingDate());
+        response.setLoadingDate(transaction.getLoadingDate());
+        response.setUnloadingDate(transaction.getUnloadingDate());
 
-    response.setShortage(transaction.getShortage());
+        response.setShortage(transaction.getShortage());
 
-    response.setOwnerRate(transaction.getOwnerRate());
-    response.setTotalAmount(transaction.getTotalAmount());
-    response.setJumboRate(transaction.getJumboRate());
-    response.setTonMt(transaction.getTonMt());
-    response.setOtherPay(transaction.getOtherPay());
+        response.setOwnerRate(transaction.getOwnerRate());
+        response.setTotalAmount(transaction.getTotalAmount());
+        response.setJumboRate(transaction.getJumboRate());
+        response.setTonMt(transaction.getTonMt());
+        response.setOtherPay(transaction.getOtherPay());
 
-    response.setDieselRqNo(transaction.getDieselRqNo());
-    response.setDieselRqDate(transaction.getDieselRqDate());
-    response.setDieselRate(transaction.getDieselRate());
-    response.setDieselQty(transaction.getDieselQty());
-    response.setDieselAmount(transaction.getDieselAmount());
+        response.setDieselRqNo(transaction.getDieselRqNo());
+        response.setDieselRqDate(transaction.getDieselRqDate());
+        response.setDieselRate(transaction.getDieselRate());
+        response.setDieselQty(transaction.getDieselQty());
+        response.setDieselAmount(transaction.getDieselAmount());
 
-    response.setAdvance(transaction.getAdvance());
-    response.setParkingCharges(transaction.getParkingCharges());
+        response.setAdvance(transaction.getAdvance());
+        response.setParkingCharges(transaction.getParkingCharges());
 
-    response.setPaymentDate(transaction.getPaymentDate());
-    response.setTripBalance(transaction.getTripBalance());
-    response.setProfitRate(transaction.getProfitRate());
-    response.setProfitAmount(transaction.getProfitAmount());
+        response.setPaymentDate(transaction.getPaymentDate());
+        response.setTripBalance(transaction.getTripBalance());
+        response.setProfitRate(transaction.getProfitRate());
+        response.setProfitAmount(transaction.getProfitAmount());
 
-    // Created By
-    if (transaction.getCreatedBy() != null) {
-        response.setCreatedBy(transaction.getCreatedBy().getId());
+        if (transaction.getCreatedBy() != null) {
+                response.setCreatedBy(transaction.getCreatedBy().getId());
 
-        // Change getName() if your User entity uses another field
-        response.setCreatedByName(
-                transaction.getCreatedBy().getUsername());
-    }
+                response.setCreatedByName(
+                        transaction.getCreatedBy().getUsername());
+        }
 
-    response.setCreatedDate(transaction.getCreatedDate());
+        response.setCreatedDate(transaction.getCreatedDate());
 
-    return response;
-}
+        return response;
+        }
 
 }
