@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
+import transport_backend.dto.OwnerDestinationRateRevisionItem;
+import transport_backend.dto.OwnerDestinationRateRevisionRequest;
 import transport_backend.entity.DestinationMaster;
 import transport_backend.entity.OwnerDestinationRate;
 import transport_backend.entity.OwnerMaster;
@@ -17,7 +19,9 @@ import transport_backend.repository.ProductMasterRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -318,4 +322,150 @@ public class OwnerDestinationRateService {
                 rate.getBenefit()
         );
     }
+
+    @Transactional
+        public void reviseRates(
+                OwnerDestinationRateRevisionRequest request) {
+
+        LocalDate effectiveDate = request.getEffectiveDate();
+
+        LocalDate previousDate = effectiveDate.minusDays(1);
+
+        LocalDate newToDate = effectiveDate
+                .plusYears(10)
+                .minusDays(1);
+
+        Set<String> requestKeys = new HashSet<>();
+
+        for (OwnerDestinationRateRevisionItem item : request.getRates()) {
+
+                Long ownerId = item.getOwnerId();
+                Long productId = item.getProductId();
+                Long destinationId = item.getDestinationId();
+
+                /*
+                * Prevent duplicate owner + product + destination
+                * in the same request
+                */
+                String requestKey =
+                        ownerId + "_" + productId + "_" + destinationId;
+
+                if (!requestKeys.add(requestKey)) {
+                throw new RuntimeException(
+                        "Duplicate rate in request for ownerId: "
+                                + ownerId
+                                + ", productId: "
+                                + productId
+                                + " and destinationId: "
+                                + destinationId);
+                }
+
+                /*
+                * Validate Owner
+                */
+                OwnerMaster owner = ownerRepository
+                        .findById(ownerId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Owner not found with id: "
+                                                + ownerId));
+
+                /*
+                * Validate Product
+                */
+                ProductMaster product = productRepository
+                        .findById(productId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Product not found with id: "
+                                                + productId));
+
+                /*
+                * Validate Destination
+                */
+                DestinationMaster destination = destinationRepository
+                        .findById(destinationId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Destination not found with id: "
+                                                + destinationId));
+
+                /*
+                * Check whether a record already exists
+                * starting on the effective date.
+                */
+                boolean alreadyExists =
+                        rateRepository
+                                .existsByOwner_IdAndProduct_IdAndDestination_IdAndFromDate(
+                                        ownerId,
+                                        productId,
+                                        destinationId,
+                                        effectiveDate
+                                );
+
+                if (alreadyExists) {
+                throw new RuntimeException(
+                        "Rate already exists for ownerId: "
+                                + ownerId
+                                + ", productId: "
+                                + productId
+                                + ", destinationId: "
+                                + destinationId
+                                + ", effectiveDate: "
+                                + effectiveDate);
+                }
+
+                /*
+                * Find current applicable owner rate
+                */
+                OwnerDestinationRate existing =
+                        rateRepository.findApplicableRate(
+                                ownerId,
+                                productId,
+                                destinationId,
+                                effectiveDate
+                        ).orElse(null);
+
+                /*
+                * Close existing rate
+                */
+                if (existing != null) {
+
+                existing.setToDate(previousDate);
+
+                rateRepository.save(existing);
+                }
+
+                /*
+                * Create new owner rate
+                */
+                OwnerDestinationRate newRate =
+                        new OwnerDestinationRate();
+
+                newRate.setOwner(owner);
+                newRate.setProduct(product);
+                newRate.setDestination(destination);
+
+                newRate.setFromDate(effectiveDate);
+                newRate.setToDate(newToDate);
+
+                /*
+                * Company rate comes from the request/current
+                * company destination rate.
+                */
+                newRate.setCompanyRate(item.getCompanyRate());
+
+                newRate.setOwnerRate(item.getOwnerRate());
+
+                /*
+                * Benefit = Company Rate - Owner Rate
+                */
+                newRate.setBenefit(
+                        item.getCompanyRate()
+                                .subtract(item.getOwnerRate())
+                );
+
+                rateRepository.save(newRate);
+        }
+        }
 }

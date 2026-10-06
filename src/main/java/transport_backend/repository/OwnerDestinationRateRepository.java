@@ -8,6 +8,7 @@ import transport_backend.entity.OwnerDestinationRate;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface OwnerDestinationRateRepository
         extends JpaRepository<OwnerDestinationRate, Long> {
@@ -47,4 +48,27 @@ public interface OwnerDestinationRateRepository
             @Param("fromDate") LocalDate fromDate,
             @Param("toDate") LocalDate toDate
     );
+
+    boolean existsByOwner_IdAndProduct_IdAndDestination_IdAndFromDate(
+                Long ownerId,
+                Long productId,
+                Long destinationId,
+                LocalDate fromDate
+        );
+
+        @Query("""
+                SELECT r
+                FROM OwnerDestinationRate r
+                WHERE r.owner.id = :ownerId
+                AND r.product.id = :productId
+                AND r.destination.id = :destinationId
+                AND r.fromDate <= :effectiveDate
+                AND r.toDate >= :effectiveDate
+                """)
+                Optional<OwnerDestinationRate> findApplicableRate(
+                        @Param("ownerId") Long ownerId,
+                        @Param("productId") Long productId,
+                        @Param("destinationId") Long destinationId,
+                        @Param("effectiveDate") LocalDate effectiveDate
+                );
 }

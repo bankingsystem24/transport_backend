@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
+import transport_backend.dto.OwnerDestinationRateRevisionRequest;
 import transport_backend.service.OwnerDestinationRateService;
 
 import java.util.List;
@@ -94,4 +95,18 @@ public class OwnerDestinationRateController {
                 )
         );
     }
+
+        @PostMapping("/revise")
+        public ResponseEntity<?> reviseRates(
+                @Valid @RequestBody OwnerDestinationRateRevisionRequest request) {
+
+                rateService.reviseRates(request);
+
+                return ResponseEntity.ok(
+                        Map.of(
+                                "message",
+                                "Owner destination rates updated successfully"
+                        )
+                );
+        }
 }
