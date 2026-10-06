@@ -29,8 +29,11 @@ public class TransportTransactionResponse {
     private String destinationName;
 
     private LocalDate diDate;
+    private LocalDate invoiceDate;
     private String diNo;
+    private String dcNo;
     private String lrNo;
+    private String remarks;
 
     private String invoiceNo;
     private String invoiceNo1;
@@ -428,5 +431,29 @@ public class TransportTransactionResponse {
     public void setProfitAmount (BigDecimal profitAmount) {
         this.profitAmount = profitAmount;
     }   
+
+    public LocalDate getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public void setInvoiceDate(LocalDate invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
+
+    public String getDcNo() {
+        return dcNo;
+    }
+
+    public void setDcNo(String dcNo) {
+        this.dcNo = dcNo;
+    }
+
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
 
 }

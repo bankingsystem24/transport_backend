@@ -57,9 +57,15 @@ public class TransportTransaction {
     private String destinationName;
 
     private LocalDate diDate;
+    private LocalDate invoiceDate;
+    private String remarks;
+
 
     @Column(name = "di_no", length = 100)
     private String diNo;
+
+    @Column(name = "dc_no", length = 100)
+    private String dcNo;
 
     @Column(name = "lr_no", length = 100)
     private String lrNo;
@@ -212,6 +218,14 @@ public class TransportTransaction {
         this.partyName = partyName;
     }
 
+    public String getRemarks() {
+        return remarks;
+    }
+
+    public void setRemarks(String remarks) {
+        this.remarks = remarks;
+    }
+
     public DestinationMaster getDestination() {
         return destination;
     }
@@ -236,12 +250,28 @@ public class TransportTransaction {
         this.diDate = diDate;
     }
 
+    public LocalDate getInvoiceDate() {
+        return invoiceDate;
+    }
+
+    public void setInvoiceDate(LocalDate invoiceDate) {
+        this.invoiceDate = invoiceDate;
+    }
+
     public String getDiNo() {
         return diNo;
     }
 
     public void setDiNo(String diNo) {
         this.diNo = diNo;
+    }
+
+    public String getDcNo() {
+        return dcNo;
+    }
+
+    public void setDcNo(String dcNo) {
+        this.dcNo = dcNo;
     }
 
     public String getLrNo() {

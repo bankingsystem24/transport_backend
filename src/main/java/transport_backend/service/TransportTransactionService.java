@@ -249,76 +249,37 @@ public class TransportTransactionService {
                         transaction.setDestination(null);
                 }
 
-                transaction.setVehicleName(
-                                request.getVehicleName());
-
-                transaction.setPartyName(
-                                request.getPartyName());
-
-                transaction.setDestinationName(
-                                request.getDestinationName());
-
+                transaction.setVehicleName(request.getVehicleName());
+                transaction.setPartyName(request.getPartyName());
+                transaction.setDestinationName(request.getDestinationName());
                 transaction.setDiDate(request.getDiDate());
                 transaction.setDiNo(request.getDiNo());
                 transaction.setLrNo(request.getLrNo());
-
                 transaction.setInvoiceNo(request.getInvoiceNo());
                 transaction.setInvoiceNo1(request.getInvoiceNo1());
                 transaction.setInvoiceNo2(request.getInvoiceNo2());
-
                 transaction.setLoadingWt(request.getLoadingWt());
                 transaction.setUnloadingWt(request.getUnloadingWt());
-
-                transaction.setLoadingDate(
-                                request.getLoadingDate());
-
-                transaction.setUnloadingDate(
-                                request.getUnloadingDate());
-
-                transaction.setShortage(
-                                request.getShortage());
-
-                transaction.setOwnerRate(
-                                request.getOwnerRate());
-
-                transaction.setTotalAmount(
-                                request.getTotalAmount());
-
-                transaction.setJumboRate(
-                                request.getJumboRate());
-
-                transaction.setTonMt(
-                                request.getTonMt());
-
-                transaction.setOtherPay(
-                                request.getOtherPay());
-
-                transaction.setDieselRqNo(
-                                request.getDieselRqNo());
-
-                transaction.setDieselRqDate(
-                                request.getDieselRqDate());
-
-                transaction.setDieselRate(
-                                request.getDieselRate());
-
-                transaction.setDieselQty(
-                                request.getDieselQty());
-
-                transaction.setDieselAmount(
-                                request.getDieselAmount());
-
-                transaction.setAdvance(
-                                request.getAdvance());
-
-                transaction.setParkingCharges(
-                                request.getParkingCharges());
-
-                transaction.setPaymentDate(
-                                request.getPaymentDate());
-
-                transaction.setTripBalance(
-                                request.getTripBalance());
+                transaction.setLoadingDate(request.getLoadingDate());
+                transaction.setUnloadingDate(request.getUnloadingDate());
+                transaction.setShortage(request.getShortage());
+                transaction.setOwnerRate(request.getOwnerRate());
+                transaction.setTotalAmount(request.getTotalAmount());
+                transaction.setJumboRate(request.getJumboRate());
+                transaction.setTonMt(request.getTonMt());
+                transaction.setOtherPay(request.getOtherPay());
+                transaction.setDieselRqNo(request.getDieselRqNo());
+                transaction.setDieselRqDate(request.getDieselRqDate());
+                transaction.setDieselRate(request.getDieselRate());
+                transaction.setDieselQty(request.getDieselQty());
+                transaction.setDieselAmount(request.getDieselAmount());
+                transaction.setAdvance(request.getAdvance());
+                transaction.setParkingCharges(request.getParkingCharges());
+                transaction.setPaymentDate(request.getPaymentDate());
+                transaction.setTripBalance(request.getTripBalance());
+                transaction.setDcNo(request.getDcNo());
+                transaction.setRemarks(request.getRemarks());
+                transaction.setInvoiceDate(request.getInvoiceDate());
 
                 if (transaction.getId() == null
                                 && request.getCreatedById() != null) {
@@ -601,80 +562,34 @@ public class TransportTransactionService {
                                         transaction.getDestinationName());
                 }
 
-                response.setDiDate(
-                                transaction.getDiDate());
-
-                response.setDiNo(
-                                transaction.getDiNo());
-
-                response.setLrNo(
-                                transaction.getLrNo());
-
-                response.setInvoiceNo(
-                                transaction.getInvoiceNo());
-
-                response.setInvoiceNo1(
-                                transaction.getInvoiceNo1());
-
-                response.setInvoiceNo2(
-                                transaction.getInvoiceNo2());
-
-                response.setLoadingWt(
-                                transaction.getLoadingWt());
-
-                response.setUnloadingWt(
-                                transaction.getUnloadingWt());
-
-                response.setLoadingDate(
-                                transaction.getLoadingDate());
-
-                response.setUnloadingDate(
-                                transaction.getUnloadingDate());
-
-                response.setShortage(
-                                transaction.getShortage());
-                response.setOwnerRate(
-                                transaction.getOwnerRate());
-
-                response.setTotalAmount(
-                                transaction.getTotalAmount());
-
-                response.setJumboRate(
-                                transaction.getJumboRate());
-
-                response.setTonMt(
-                                transaction.getTonMt());
-
-                response.setOtherPay(
-                                transaction.getOtherPay());
-
-                response.setDieselRqNo(
-                                transaction.getDieselRqNo());
-
-                response.setDieselRqDate(
-                                transaction.getDieselRqDate());
-
-                response.setDieselRate(
-                                transaction.getDieselRate());
-
-                response.setDieselQty(
-                                transaction.getDieselQty());
-
-                response.setDieselAmount(
-                                transaction.getDieselAmount());
-
-                response.setAdvance(
-                                transaction.getAdvance());
-
-                response.setParkingCharges(
-                                transaction.getParkingCharges());
-
-                response.setPaymentDate(
-                                transaction.getPaymentDate());
-
-                response.setTripBalance(
-                                transaction.getTripBalance());
-
+                response.setDiDate(transaction.getDiDate());
+                response.setInvoiceDate(transaction.getInvoiceDate());
+                response.setDiNo(transaction.getDiNo());
+                response.setDcNo(transaction.getDcNo());
+                response.setRemarks(transaction.getRemarks());
+                response.setLrNo(transaction.getLrNo());
+                response.setInvoiceNo(transaction.getInvoiceNo());
+                response.setInvoiceNo1(transaction.getInvoiceNo1());
+                response.setInvoiceNo2(transaction.getInvoiceNo2());
+                response.setLoadingWt(transaction.getLoadingWt());
+                response.setUnloadingWt(transaction.getUnloadingWt());
+                response.setLoadingDate(transaction.getLoadingDate());
+                response.setUnloadingDate(transaction.getUnloadingDate());
+                response.setShortage(transaction.getShortage());
+                response.setOwnerRate(transaction.getOwnerRate());
+                response.setTotalAmount(transaction.getTotalAmount());
+                response.setJumboRate(transaction.getJumboRate());
+                response.setTonMt(transaction.getTonMt());
+                response.setOtherPay(transaction.getOtherPay());
+                response.setDieselRqNo(transaction.getDieselRqNo());
+                response.setDieselRqDate(transaction.getDieselRqDate());
+                response.setDieselRate(transaction.getDieselRate());
+                response.setDieselQty(transaction.getDieselQty());
+                response.setDieselAmount(transaction.getDieselAmount());
+                response.setAdvance(transaction.getAdvance());
+                response.setParkingCharges(transaction.getParkingCharges());
+                response.setPaymentDate(transaction.getPaymentDate());
+                response.setTripBalance(transaction.getTripBalance());
                 if (transaction.getCreatedBy() != null) {
 
                         response.setCreatedById(
