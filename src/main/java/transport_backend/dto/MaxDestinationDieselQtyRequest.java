@@ -9,9 +9,6 @@ import java.math.BigDecimal;
 @Data
 public class MaxDestinationDieselQtyRequest {
 
-    @NotNull(message = "Company is required")
-    private Long companyId;
-
     @NotNull(message = "Destination is required")
     private Long destinationId;
 

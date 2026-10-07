@@ -36,14 +36,22 @@ public class MaxDestinationDieselQtyController {
                 (JwtAuthenticationDetails) authentication.getDetails();
 
         Long userId = details.getUserId();
+        Long companyId = details.getCompanyId();
 
         return ResponseEntity.ok(
-                service.create(request, userId));
+                service.create(request, userId, companyId));
     }
 
     @GetMapping
-    public ResponseEntity<List<MaxDestinationDieselQtyResponse>> getAll() {
-        return ResponseEntity.ok(service.getAll());
+    public ResponseEntity<List<MaxDestinationDieselQtyResponse>> getAll(
+        Authentication authentication
+    ) {
+
+        JwtAuthenticationDetails details =
+        (JwtAuthenticationDetails) authentication.getDetails();
+        Long companyId = details.getCompanyId();
+
+        return ResponseEntity.ok(service.getAll(companyId));
     }
 
     @GetMapping("/{id}")
@@ -56,10 +64,16 @@ public class MaxDestinationDieselQtyController {
     @PutMapping("/{id}")
     public ResponseEntity<MaxDestinationDieselQtyResponse> update(
             @PathVariable Long id,
-            @Valid @RequestBody MaxDestinationDieselQtyRequest request) {
+            @Valid @RequestBody MaxDestinationDieselQtyRequest request,
+            Authentication authentication) {
+
+            JwtAuthenticationDetails details =
+            (JwtAuthenticationDetails) authentication.getDetails();
+
+        Long companyId = details.getCompanyId();
 
         return ResponseEntity.ok(
-                service.update(id, request));
+                service.update(id, request,companyId));
     }
 
     @DeleteMapping("/{id}")

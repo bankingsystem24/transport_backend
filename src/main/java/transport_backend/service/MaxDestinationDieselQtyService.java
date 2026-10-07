@@ -14,6 +14,7 @@ import transport_backend.entity.MaxDestinationDieselQty;
 import transport_backend.repository.CompanyMasterRepository;
 import transport_backend.repository.DestinationMasterRepository;
 import transport_backend.repository.MaxDestinationDieselQtyRepository;
+
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -27,26 +28,26 @@ public class MaxDestinationDieselQtyService {
     @Transactional
     public MaxDestinationDieselQtyResponse create(
             MaxDestinationDieselQtyRequest request,
-            Long userId) {
-
+            Long userId,Long companyId) {
+        
         if (repository.existsByCompany_IdAndDestination_Id(
-                request.getCompanyId(),
+                companyId,
                 request.getDestinationId())) {
 
             throw new RuntimeException(
                     "Maximum diesel quantity already exists for companyId: "
-                            + request.getCompanyId()
+                            + companyId
                             + " and destinationId: "
                             + request.getDestinationId());
         }
 
         CompanyMaster company =
                 companyRepository.findById(
-                        request.getCompanyId())
+                        companyId)
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Company not found with id: "
-                                        + request.getCompanyId()));
+                                        + companyId));
 
         DestinationMaster destination =
                 destinationRepository.findById(
@@ -61,9 +62,7 @@ public class MaxDestinationDieselQtyService {
 
         entity.setCompany(company);
         entity.setDestination(destination);
-        entity.setMaxDieselQty(
-                request.getMaxDieselQty());
-
+        entity.setMaxDieselQty(request.getMaxDieselQty());
         entity.setCreatedBy(userId);
         entity.setCreatedDate(LocalDateTime.now());
 
@@ -71,9 +70,9 @@ public class MaxDestinationDieselQtyService {
     }
 
     @Transactional(readOnly = true)
-    public List<MaxDestinationDieselQtyResponse> getAll() {
+    public List<MaxDestinationDieselQtyResponse> getAll(Long companyId) {
 
-        return repository.findAll()
+        return repository.findByCompanyId(companyId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -95,7 +94,8 @@ public class MaxDestinationDieselQtyService {
     @Transactional
     public MaxDestinationDieselQtyResponse update(
             Long id,
-            MaxDestinationDieselQtyRequest request) {
+            MaxDestinationDieselQtyRequest request,
+            Long companyId) {
 
         MaxDestinationDieselQty entity =
                 repository.findById(id)
@@ -103,10 +103,9 @@ public class MaxDestinationDieselQtyService {
                         new RuntimeException(
                                 "Maximum diesel quantity not found with id: "
                                         + id));
-
         boolean companyChanged =
                 !entity.getCompany().getId()
-                        .equals(request.getCompanyId());
+                        .equals(companyId);
 
         boolean destinationChanged =
                 !entity.getDestination().getId()
@@ -115,23 +114,23 @@ public class MaxDestinationDieselQtyService {
         if (companyChanged || destinationChanged) {
 
             if (repository.existsByCompany_IdAndDestination_Id(
-                    request.getCompanyId(),
+                    companyId,
                     request.getDestinationId())) {
 
                 throw new RuntimeException(
                         "Maximum diesel quantity already exists for companyId: "
-                                + request.getCompanyId()
+                                + companyId
                                 + " and destinationId: "
                                 + request.getDestinationId());
             }
 
             CompanyMaster company =
                     companyRepository.findById(
-                            request.getCompanyId())
+                            companyId)
                     .orElseThrow(() ->
                             new RuntimeException(
                                     "Company not found with id: "
-                                            + request.getCompanyId()));
+                                            + companyId));
 
             DestinationMaster destination =
                     destinationRepository.findById(
@@ -145,9 +144,7 @@ public class MaxDestinationDieselQtyService {
             entity.setDestination(destination);
         }
 
-        entity.setMaxDieselQty(
-                request.getMaxDieselQty());
-
+        entity.setMaxDieselQty(request.getMaxDieselQty());
         entity.setUpdatedDate(LocalDateTime.now());
 
         return mapToResponse(repository.save(entity));
@@ -169,35 +166,17 @@ public class MaxDestinationDieselQtyService {
     private MaxDestinationDieselQtyResponse mapToResponse(
             MaxDestinationDieselQty entity) {
 
-        MaxDestinationDieselQtyResponse response =
-                new MaxDestinationDieselQtyResponse();
+        MaxDestinationDieselQtyResponse response = new MaxDestinationDieselQtyResponse();
 
         response.setId(entity.getId());
-
-        response.setCompanyId(
-                entity.getCompany().getId());
-
-        response.setCompanyName(
-                entity.getCompany().getCompanyName());
-
-        response.setDestinationId(
-                entity.getDestination().getId());
-
-        response.setDestinationName(
-                entity.getDestination().getDestination());
-
-        response.setMaxDieselQty(
-                entity.getMaxDieselQty());
-
-        response.setCreatedBy(
-                entity.getCreatedBy());
-
-        response.setCreatedDate(
-                entity.getCreatedDate());
-
-        response.setUpdatedDate(
-                entity.getUpdatedDate());
-
+        response.setCompanyId(entity.getCompany().getId());
+        response.setCompanyName(entity.getCompany().getCompanyName());
+        response.setDestinationId(entity.getDestination().getId());
+        response.setDestinationName(entity.getDestination().getDestination());
+        response.setMaxDieselQty(entity.getMaxDieselQty());
+        response.setCreatedBy(entity.getCreatedBy());
+        response.setCreatedDate(entity.getCreatedDate());
+        response.setUpdatedDate(entity.getUpdatedDate());
         return response;
     }
 }
