@@ -1,6 +1,9 @@
 package transport_backend.service;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import transport_backend.dto.CompanyProductMappingRequest;
 import transport_backend.entity.CompanyMaster;
@@ -19,13 +22,13 @@ public class CompanyProductMappingService {
     private final ProductMasterRepository productRepository;
 
     public CompanyProductMapping saveOrUpdate(
-            CompanyProductMappingRequest request) {
+            CompanyProductMappingRequest request, Long companyId) {
 
         CompanyMaster company = companyRepository
-                .findById(request.getCompanyId())
+                .findById(companyId)
                 .orElseThrow(() ->
                         new RuntimeException(
-                                "Company not found: " + request.getCompanyId()
+                                "Company not found: " + companyId
                         ));
 
         ProductMaster product = productRepository
@@ -38,7 +41,7 @@ public class CompanyProductMappingService {
         CompanyProductMapping mapping =
                 mappingRepository
                         .findByCompanyIdAndProductId(
-                                request.getCompanyId(),
+                                companyId,
                                 request.getProductId()
                         )
                         .orElseGet(CompanyProductMapping::new);
@@ -49,4 +52,9 @@ public class CompanyProductMappingService {
 
         return mappingRepository.save(mapping);
     }
+
+
+    public List<CompanyProductMapping> getAllByCompanyId(Long companyId) {
+    return mappingRepository.findByCompany_Id(companyId);
+}
 }
