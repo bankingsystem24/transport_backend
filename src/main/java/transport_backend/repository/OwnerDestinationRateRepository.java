@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import transport_backend.entity.CompanyDestinationRate;
 import transport_backend.entity.OwnerDestinationRate;
 
 import java.time.LocalDate;
@@ -71,4 +72,18 @@ public interface OwnerDestinationRateRepository
                         @Param("destinationId") Long destinationId,
                         @Param("effectiveDate") LocalDate effectiveDate
                 );
+        
+        @Query("""
+                SELECT r
+                FROM CompanyDestinationRate r
+                WHERE r.product.id = :productId
+                AND r.destination.id = :destinationId
+                AND r.fromDate <= :effectiveDate
+                AND r.toDate >= :effectiveDate
+                """)
+                Optional<CompanyDestinationRate> findApplicableRate(
+                        @Param("productId") Long productId,
+                        @Param("destinationId") Long destinationId,
+                        @Param("effectiveDate") LocalDate effectiveDate
+        );
 }

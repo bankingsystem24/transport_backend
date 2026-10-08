@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
+import transport_backend.dto.OwnerRateDateRequest;
 import transport_backend.service.OwnerDestinationRateService;
 
 import java.util.List;
@@ -109,4 +110,14 @@ public class OwnerDestinationRateController {
                         )
                 );
         }
+
+        @PostMapping("/bulk")
+        public ResponseEntity<List<OwnerDestinationRateResponse>> getAllOwnerRates(
+                @RequestBody OwnerRateDateRequest request) {
+
+        return ResponseEntity.ok(
+                rateService.getAllOwnerRates(request.getDate())
+        );
+        }
+
 }

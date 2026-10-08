@@ -7,6 +7,7 @@ import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionItem;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
+import transport_backend.entity.CompanyDestinationRate;
 import transport_backend.entity.DestinationMaster;
 import transport_backend.entity.OwnerDestinationRate;
 import transport_backend.entity.OwnerMaster;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -468,4 +470,46 @@ public class OwnerDestinationRateService {
                 rateRepository.save(newRate);
         }
         }
+
+        @Transactional
+        public List<OwnerDestinationRateResponse> getAllOwnerRates(LocalDate effectiveDate) {
+
+        List<OwnerDestinationRate> ownerRates =
+            rateRepository.findAll();
+
+    for (OwnerDestinationRate ownerRate : ownerRates) {
+
+        Long productId = ownerRate.getProduct().getId();
+        Long destinationId = ownerRate.getDestination().getId();
+
+        Optional<CompanyDestinationRate> companyRateOptional =
+                rateRepository.findApplicableRate(
+                        productId,
+                        destinationId,
+                        effectiveDate
+                );
+
+        if (companyRateOptional.isPresent()) {
+
+            CompanyDestinationRate companyRate =
+                    companyRateOptional.get();
+
+            BigDecimal companyRateValue =
+                    companyRate.getCompanyRate();
+
+            ownerRate.setCompanyRate(companyRateValue);
+
+            ownerRate.setBenefit(
+                    companyRateValue.subtract(
+                            ownerRate.getOwnerRate()
+                    )
+            );
+        }
+    }
+
+    return ownerRates.stream()
+            .map(this::mapToResponse)
+            .toList();
+}
+
 }
