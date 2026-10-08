@@ -38,13 +38,16 @@ public class CompanyDestinationRateController {
                 .body(rateService.create(request));
     }
 
-    @GetMapping
-    public ResponseEntity<List<CompanyDestinationRateResponse>> getAll() {
+@GetMapping
+public ResponseEntity<List<CompanyDestinationRateResponse>> getAll(
+        @RequestParam("date")
+        @DateTimeFormat(pattern = "yyyy-MM-dd")
+        LocalDate date) {
 
-        return ResponseEntity.ok(
-                rateService.getAll()
-        );
-    }
+    return ResponseEntity.ok(
+            rateService.getAllByDate(date)
+    );
+}
 
     @GetMapping("/{id}")
     public ResponseEntity<CompanyDestinationRateResponse> getById(

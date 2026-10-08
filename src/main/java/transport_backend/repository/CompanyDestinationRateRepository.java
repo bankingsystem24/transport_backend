@@ -13,10 +13,6 @@ import java.util.Optional;
 public interface CompanyDestinationRateRepository
         extends JpaRepository<CompanyDestinationRate, Long> {
 
-    /*
-     * Check whether the exact destination/product/date range
-     * already exists.
-     */
     boolean existsByDestination_IdAndProduct_IdAndFromDateAndToDate(
             Long destinationId,
             Long productId,
@@ -99,5 +95,17 @@ boolean existsByProduct_IdAndDestination_IdAndFromDate(
             @Param("destinationId") Long destinationId,
             @Param("wefDate") LocalDate wefDate
     );
+
+    @Query("""
+    SELECT r
+    FROM CompanyDestinationRate r
+    WHERE r.fromDate <= :date
+      AND r.toDate >= :date
+    ORDER BY r.destination.id, r.product.id
+""")
+List<CompanyDestinationRate> findRatesByDate(
+        @Param("date") LocalDate date
+);
+
 }
 

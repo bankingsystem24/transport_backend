@@ -101,14 +101,16 @@ public class CompanyDestinationRateService {
         // GET ALL
         // =========================================================
 
-        @Transactional(readOnly = true)
-        public List<CompanyDestinationRateResponse> getAll() {
+public List<CompanyDestinationRateResponse> getAllByDate(
+        LocalDate date) {
 
-                return rateRepository.findAll()
-                                .stream()
-                                .map(this::mapToResponse)
-                                .toList();
-        }
+    List<CompanyDestinationRate> rates =
+            rateRepository.findRatesByDate(date);
+
+    return rates.stream()
+            .map(this::mapToResponse)
+            .toList();
+}
 
         // =========================================================
         // GET BY ID
