@@ -15,4 +15,9 @@ public interface CompanyProductMappingRepository
     );
 
     List<CompanyProductMapping> findByCompany_Id(Long companyId);
+
+        Optional<CompanyProductMapping> findByIdAndCompanyId(
+            Long id,
+            Long companyId
+    );
 }

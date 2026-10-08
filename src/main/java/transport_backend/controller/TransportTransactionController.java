@@ -39,14 +39,11 @@ public class TransportTransactionController {
 
         // GET ALL
         @GetMapping
-        public ResponseEntity<List<TransportTransactionResponse>> getAll(Authentication authentication) {
-
-        JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
-
-        Long companyId = details.getCompanyId();
-
-                return ResponseEntity.ok(
-                                transportTransactionService.getAll(companyId));
+        public ResponseEntity<List<TransportTransactionResponse>> getAll(Authentication authentication) 
+        {
+                JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+                Long companyId = details.getCompanyId();
+                return ResponseEntity.ok(transportTransactionService.getAll(companyId));
         }
 
         // GET BY ID

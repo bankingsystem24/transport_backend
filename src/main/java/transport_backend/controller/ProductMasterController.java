@@ -3,9 +3,11 @@ package transport_backend.controller;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import transport_backend.dto.ProductMasterRequest;
 import transport_backend.dto.ProductMasterResponse;
+import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.ProductMasterService;
 
 import java.util.List;
@@ -23,11 +25,17 @@ public class ProductMasterController {
     // CREATE
     @PostMapping
     public ResponseEntity<ProductMasterResponse> create(
-            @Valid @RequestBody ProductMasterRequest request) {
+            @Valid @RequestBody ProductMasterRequest request,
+            Authentication authentication) {
+
+        JwtAuthenticationDetails details =
+        (JwtAuthenticationDetails) authentication.getDetails();
+
+        Long userId = (Long) details.getUserId();            
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(productMasterService.create(request));
+                .body(productMasterService.create(request,userId));
     }
 
     // GET ALL

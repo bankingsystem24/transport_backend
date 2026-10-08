@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import transport_backend.dto.CompanyProductMappingRequest;
 import transport_backend.entity.CompanyMaster;
 import transport_backend.entity.CompanyProductMapping;
@@ -57,4 +59,19 @@ public class CompanyProductMappingService {
     public List<CompanyProductMapping> getAllByCompanyId(Long companyId) {
     return mappingRepository.findByCompany_Id(companyId);
 }
+
+        @Transactional
+        public void deleteByIdAndCompanyId(Long id, Long companyId) {
+
+        CompanyProductMapping mapping =
+                mappingRepository.findByIdAndCompanyId(id, companyId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Company Product Mapping not found"
+                                ));
+
+        mappingRepository.delete(mapping);
+        }
+
+
 }

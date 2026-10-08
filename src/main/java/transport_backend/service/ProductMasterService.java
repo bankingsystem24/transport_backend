@@ -29,7 +29,7 @@ public class ProductMasterService {
     }
 
     // CREATE
-    public ProductMasterResponse create(ProductMasterRequest request) {
+    public ProductMasterResponse create(ProductMasterRequest request,Long userId) {
 
         if (productMasterRepository
                 .existsByProductNameIgnoreCase(request.getProductName().trim())) {
@@ -37,7 +37,7 @@ public class ProductMasterService {
             throw new RuntimeException("Product already exists");
         }
 
-        User user = userRepository.findById(request.getCreatedBy())
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         ProductMaster product = new ProductMaster();

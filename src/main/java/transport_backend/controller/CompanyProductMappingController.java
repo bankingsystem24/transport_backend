@@ -22,31 +22,38 @@ public class CompanyProductMappingController {
     @PostMapping                       //For create and Update
     public ResponseEntity<CompanyProductMapping> saveOrUpdate(
             @RequestBody CompanyProductMappingRequest request,
-            Authentication authentication) {
+            Authentication authentication) 
+        {
 
-        JwtAuthenticationDetails details =
-                (JwtAuthenticationDetails) authentication.getDetails();
-
-        Long companyId = details.getCompanyId();
-
-        CompanyProductMapping result =
-                service.saveOrUpdate(request, companyId);
-
-        return ResponseEntity.ok(result);
-    }
+                JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+                Long companyId = details.getCompanyId();
+                CompanyProductMapping result =  service.saveOrUpdate(request, companyId);
+                return ResponseEntity.ok(result);
+        }
 
    @GetMapping
-    public ResponseEntity<List<CompanyProductMapping>> getAll(
-            Authentication authentication) {
+        public ResponseEntity<List<CompanyProductMapping>> getAll(
+            Authentication authentication) 
+        {
 
-        JwtAuthenticationDetails details =
+                JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+                Long companyId = details.getCompanyId();
+
+                return ResponseEntity.ok(service.getAllByCompanyId(companyId));
+        }
+
+    @DeleteMapping("/{id}")
+        public ResponseEntity<String> delete(
+                @PathVariable Long id,
+                Authentication authentication) 
+        {
+                JwtAuthenticationDetails details =
                 (JwtAuthenticationDetails) authentication.getDetails();
+                Long companyId = details.getCompanyId();
+                service.deleteByIdAndCompanyId(id, companyId);
+                return ResponseEntity.ok("Company Product Mapping deleted successfully");
 
-        Long companyId = details.getCompanyId();
-
-        return ResponseEntity.ok(
-                service.getAllByCompanyId(companyId)
-        );
-    }
+        }
 
 }
+

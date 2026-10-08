@@ -68,90 +68,78 @@ public class TransportTransactionService {
         }
 
         @Transactional
-        public TransportTransactionResponse create(
-                TransportTransactionRequest request) {
+        public TransportTransactionResponse create(TransportTransactionRequest request) 
+        {
 
-        String diNo = request.getDiNo() != null
-                ? request.getDiNo().trim()
-                : null;
+                String diNo = request.getDiNo() != null
+                        ? request.getDiNo().trim()
+                        : null;
 
-        String lrNo = request.getLrNo() != null
-                ? request.getLrNo().trim()
-                : null;
+                String lrNo = request.getLrNo() != null
+                        ? request.getLrNo().trim()
+                        : null;
 
-        String invoiceNo = request.getInvoiceNo() != null
-                ? request.getInvoiceNo().trim()
-                : null;
+                String invoiceNo = request.getInvoiceNo() != null
+                        ? request.getInvoiceNo().trim()
+                        : null;
 
-        if (transactionRepository.existsByCompany_IdAndDiNoAndLrNoAndInvoiceNo(
-                request.getCompanyId(),
-                diNo,
-                lrNo,
-                invoiceNo)) {
+                if (transactionRepository.existsByCompany_IdAndDiNoAndLrNoAndInvoiceNo(
+                        request.getCompanyId(),
+                        diNo,
+                        lrNo,
+                        invoiceNo)) 
+                {
+                        throw new RuntimeException(
+                                "Transaction already exists for "
+                                        + "DI No: " + diNo
+                                        + ", LR No: " + lrNo
+                                        + ", Invoice No: " + invoiceNo);
+                }
 
-        throw new RuntimeException(
-                "Transaction already exists for "
-                        + "DI No: " + diNo
-                        + ", LR No: " + lrNo
-                        + ", Invoice No: " + invoiceNo);
-        }
+                TransportTransaction transaction = new TransportTransaction();
+                mapRequestToEntity(transaction, request);
+                transaction.setCreatedDate(LocalDateTime.now());
+                TransportTransaction saved = transactionRepository.save(transaction);
 
-        TransportTransaction transaction =
-                new TransportTransaction();
+                saveLog(
+                        saved,
+                        "CREATE",
+                        null,
+                        createSnapshot(saved),
+                        getUser(request.getCreatedById()));
 
-        mapRequestToEntity(transaction, request);
-
-        transaction.setCreatedDate(LocalDateTime.now());
-
-        TransportTransaction saved =
-                transactionRepository.save(transaction);
-
-        saveLog(
-                saved,
-                "CREATE",
-                null,
-                createSnapshot(saved),
-                getUser(request.getCreatedById()));
-
-        return mapToResponse(saved);
+                return mapToResponse(saved);
         }
 
         @Transactional(readOnly = true)
-        public TransportTransactionResponse getById(Long id) {
-
+        public TransportTransactionResponse getById(Long id) 
+        {
                 TransportTransaction transaction = transactionRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Transport transaction not found with id: "
                                                                 + id));
-
                 return mapToResponse(transaction);
         }
 
         @Transactional(readOnly = true)
-        public List<TransportTransactionResponse> getAll(Long companyId) {
-
-        return transactionRepository
-                .findByCompany_Id(companyId)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
+        public List<TransportTransactionResponse> getAll(Long companyId)        
+        {
+                return transactionRepository
+                        .findByCompany_Id(companyId)
+                        .stream()
+                        .map(this::mapToResponse)
+                        .toList();
         }
 
-        public TransportTransactionResponse update(
-                        Long id,
-                        TransportTransactionRequest request) {
-
+        public TransportTransactionResponse update(Long id, TransportTransactionRequest request) 
+        {
                 TransportTransaction transaction = transactionRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Transport transaction not found with id: "
                                                                 + id));
-
                 String oldData = createSnapshot(transaction);
-
                 mapRequestToEntity(transaction, request);
-
                 TransportTransaction updated = transactionRepository.save(transaction);
-
                 String newData = createSnapshot(updated);
 
                 saveLog(
@@ -160,12 +148,11 @@ public class TransportTransactionService {
                                 oldData,
                                 newData,
                                 getUser(request.getCreatedById()));
-
                 return mapToResponse(updated);
         }
 
-        public void delete(Long id) {
-
+        public void delete(Long id) 
+        {
                 TransportTransaction transaction = transactionRepository.findById(id)
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Transport transaction not found with id: "
@@ -174,35 +161,27 @@ public class TransportTransactionService {
                 transactionRepository.delete(transaction);
         }
 
-        private void mapRequestToEntity(
-                        TransportTransaction transaction,
-                        TransportTransactionRequest request) {
-
+        private void mapRequestToEntity(TransportTransaction transaction, TransportTransactionRequest request) 
+        {
                 ProductMaster product = productRepository.findById(request.getProductId())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Product not found with id: "
                                                                 + request.getProductId()));
 
                 transaction.setProduct(product);
-
                 CompanyMaster company = companyRepository.findById(request.getCompanyId())
                                 .orElseThrow(() -> new RuntimeException(
                                                 "Company not found with id: "
                                                                 + request.getCompanyId()));
-
                 transaction.setCompany(company);
-
-                if (request.getOwnerId() != null) {
-
+                if (request.getOwnerId() != null) 
+                {
                         OwnerMaster owner = ownerRepository.findById(request.getOwnerId())
                                         .orElseThrow(() -> new RuntimeException(
                                                         "Owner not found with id: "
                                                                         + request.getOwnerId()));
-
                         transaction.setOwner(owner);
-
                 } else {
-
                         transaction.setOwner(null);
                 }
 
