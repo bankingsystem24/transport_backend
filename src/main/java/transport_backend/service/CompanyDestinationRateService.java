@@ -2,11 +2,14 @@ package transport_backend.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import transport_backend.dto.CompanyDestinationRateRequest;
 import transport_backend.dto.CompanyDestinationRateResponse;
 import transport_backend.dto.CompanyDestinationRateRevisionItem;
 import transport_backend.dto.CompanyDestinationRateRevisionRequest;
+import transport_backend.dto.CompanyDestinationRateUploadDto;
+import transport_backend.dto.CompanyDestinationRateUploadResponseDto;
 import transport_backend.entity.CompanyDestinationRate;
 import transport_backend.entity.DestinationMaster;
 import transport_backend.entity.ProductMaster;
@@ -15,9 +18,17 @@ import transport_backend.repository.CompanyDestinationRateRepository;
 import transport_backend.repository.DestinationMasterRepository;
 import transport_backend.repository.ProductMasterRepository;
 
+
+import org.apache.poi.ss.usermodel.*;
+
+import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.*;
+
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -373,4 +384,374 @@ public class CompanyDestinationRateService {
                 rateRepository.save(newRate);
         }
         }
+
+    @Transactional
+    public CompanyDestinationRateUploadResponseDto uploadRates(
+            MultipartFile file,
+            LocalDate wefDate) {
+
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Excel file is required.");
+        }
+
+        if (wefDate == null) {
+            throw new RuntimeException("WEF date is required.");
+        }
+
+        List<CompanyDestinationRateUploadDto> excelRecords =
+                readExcel(file);
+
+        if (excelRecords.isEmpty()) {
+            throw new RuntimeException(
+                    "Excel file does not contain any valid records."
+            );
+        }
+
+        Set<String> uniqueKeys = new HashSet<>();
+
+        for (CompanyDestinationRateUploadDto dto : excelRecords) {
+
+            String key =
+                    dto.getProductId()
+                            + "_"
+                            + dto.getDestinationId();
+
+            if (!uniqueKeys.add(key)) {
+
+                throw new RuntimeException(
+                        "Duplicate Product_Id + Destination_Id found "
+                                + "in Excel at combination: "
+                                + key
+                );
+            }
+        }
+
+
+        LocalDate previousToDate =
+                wefDate.minusDays(1);
+
+
+        LocalDate newToDate =
+                wefDate.plusYears(10);
+
+        int recordsUpdated = 0;
+        int recordsInserted = 0;
+
+        for (CompanyDestinationRateUploadDto dto : excelRecords) {
+
+            Long destinationId =
+                    dto.getDestinationId();
+
+            Long productId =
+                    dto.getProductId();
+
+            DestinationMaster destination =
+                    destinationRepository
+                            .findById(destinationId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Destination not found with ID: "
+                                                    + destinationId
+                                    )
+                            );
+
+            ProductMaster product =
+                    productRepository
+                            .findById(productId)
+                            .orElseThrow(() ->
+                                    new RuntimeException(
+                                            "Product not found with ID: "
+                                                    + productId
+                                    )
+                            );
+
+            Optional<CompanyDestinationRate> existingRate =
+                    rateRepository
+                            .findActiveRate(
+                                    productId,
+                                    destinationId,
+                                    wefDate
+                            );
+
+            if (existingRate.isPresent()) {
+
+                CompanyDestinationRate existing =
+                        existingRate.get();
+
+                existing.setToDate(previousToDate);
+
+                rateRepository.save(existing);
+
+                recordsUpdated++;
+            }
+
+            CompanyDestinationRate newRate =
+                    new CompanyDestinationRate();
+
+            newRate.setDestination(destination);
+            newRate.setProduct(product);
+
+            newRate.setFromDate(wefDate);
+            newRate.setToDate(newToDate);
+
+            newRate.setCompanyRate(
+                    dto.getRevisedRate()
+            );
+
+            rateRepository.save(newRate);
+
+            recordsInserted++;
+        }
+
+        CompanyDestinationRateUploadResponseDto response =
+                new CompanyDestinationRateUploadResponseDto();
+
+        response.setSuccess(true);
+
+        response.setMessage(
+                "Company destination rates uploaded successfully."
+        );
+
+        response.setWefDate(
+                wefDate.toString()
+        );
+
+        response.setRecordsProcessed(
+                excelRecords.size()
+        );
+
+        response.setRecordsUpdated(
+                recordsUpdated
+        );
+
+        response.setRecordsInserted(
+                recordsInserted
+        );
+
+        return response;
+    }
+
+    private List<CompanyDestinationRateUploadDto> readExcel(
+            MultipartFile file) {
+
+        List<CompanyDestinationRateUploadDto> records =
+                new ArrayList<>();
+
+        try (InputStream inputStream =
+                     file.getInputStream();
+
+             Workbook workbook =
+                     WorkbookFactory.create(inputStream)) {
+
+            Sheet sheet =
+                    workbook.getSheetAt(0);
+
+            for (int rowIndex = 1;
+                 rowIndex <= sheet.getLastRowNum();
+                 rowIndex++) {
+
+                Row row =
+                        sheet.getRow(rowIndex);
+
+                if (row == null ||
+                        isRowEmpty(row)) {
+                    continue;
+                }
+
+                CompanyDestinationRateUploadDto dto =
+                        new CompanyDestinationRateUploadDto();
+
+
+                dto.setDestinationId(
+                        getLongValue(
+                                row.getCell(0)
+                        )
+                );
+
+
+                dto.setDestination(
+                        getStringValue(
+                                row.getCell(1)
+                        )
+                );
+
+
+                dto.setProductId(
+                        getLongValue(
+                                row.getCell(2)
+                        )
+                );
+
+
+                dto.setProduct(
+                        getStringValue(
+                                row.getCell(3)
+                        )
+                );
+
+                dto.setCompanyRate(
+                        getDecimalValue(
+                                row.getCell(4)
+                        )
+                );
+
+
+                dto.setRevisedRate(
+                        getDecimalValue(
+                                row.getCell(5)
+                        )
+                );
+
+                validateRow(
+                        dto,
+                        rowIndex + 1
+                );
+
+                records.add(dto);
+            }
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Error while reading Excel file: "
+                            + e.getMessage(),
+                    e
+            );
+        }
+
+        return records;
+    }
+
+
+
+    private void validateRow(
+            CompanyDestinationRateUploadDto dto,
+            int rowNumber) {
+
+        if (dto.getDestinationId() == null) {
+
+            throw new RuntimeException(
+                    "Destination_Id is missing at Excel row "
+                            + rowNumber
+            );
+        }
+
+        if (dto.getProductId() == null) {
+
+            throw new RuntimeException(
+                    "Product_Id is missing at Excel row "
+                            + rowNumber
+            );
+        }
+
+        if (dto.getRevisedRate() == null) {
+
+            throw new RuntimeException(
+                    "Revised_Rate is missing at Excel row "
+                            + rowNumber
+            );
+        }
+    }
+
+    private boolean isRowEmpty(Row row) {
+
+        for (int cellIndex = 0;
+             cellIndex < row.getLastCellNum();
+             cellIndex++) {
+
+            Cell cell =
+                    row.getCell(cellIndex);
+
+            if (cell != null &&
+                    cell.getCellType() != CellType.BLANK &&
+                    !getStringValue(cell).isEmpty()) {
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private String getStringValue(Cell cell) {
+
+        if (cell == null) {
+            return "";
+        }
+
+        DataFormatter formatter =
+                new DataFormatter();
+
+        return formatter
+                .formatCellValue(cell)
+                .trim();
+    }
+
+
+    private Long getLongValue(Cell cell) {
+
+        if (cell == null) {
+            return null;
+        }
+
+        if (cell.getCellType() ==
+                CellType.NUMERIC) {
+
+            return (long)
+                    cell.getNumericCellValue();
+        }
+
+        String value =
+                getStringValue(cell);
+
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        try {
+
+            return Long.parseLong(value);
+
+        } catch (NumberFormatException e) {
+
+            throw new RuntimeException(
+                    "Invalid number value: "
+                            + value
+            );
+        }
+    }
+
+    private BigDecimal getDecimalValue(Cell cell) {
+
+        if (cell == null) {
+            return null;
+        }
+
+        if (cell.getCellType() ==
+                CellType.NUMERIC) {
+
+            return BigDecimal.valueOf(
+                    cell.getNumericCellValue()
+            );
+        }
+
+        String value =
+                getStringValue(cell);
+
+        if (value.isEmpty()) {
+            return null;
+        }
+
+        try {
+
+            return new BigDecimal(value);
+
+        } catch (NumberFormatException e) {
+
+            throw new RuntimeException(
+                    "Invalid decimal value: "
+                            + value
+            );
+        }
+    }
 }

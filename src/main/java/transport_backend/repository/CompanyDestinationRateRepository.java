@@ -84,4 +84,20 @@ boolean existsByProduct_IdAndDestination_IdAndFromDate(
         LocalDate fromDate
 );
 
+
+    @Query("""
+        SELECT c
+        FROM CompanyDestinationRate c
+        WHERE c.product.id = :productId
+          AND c.destination.id = :destinationId
+          AND c.fromDate <= :wefDate
+          AND c.toDate >= :wefDate
+        ORDER BY c.fromDate DESC
+    """)
+    Optional<CompanyDestinationRate> findActiveRate(
+            @Param("productId") Long productId,
+            @Param("destinationId") Long destinationId,
+            @Param("wefDate") LocalDate wefDate
+    );
 }
+

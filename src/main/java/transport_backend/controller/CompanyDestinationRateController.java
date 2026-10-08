@@ -5,11 +5,13 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.format.annotation.DateTimeFormat;
 import transport_backend.dto.CompanyDestinationRateRequest;
 import transport_backend.dto.CompanyDestinationRateResponse;
 import transport_backend.dto.CompanyDestinationRateRevisionRequest;
+import transport_backend.dto.CompanyDestinationRateUploadResponseDto;
 import transport_backend.service.CompanyDestinationRateService;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -105,5 +107,23 @@ public class CompanyDestinationRateController {
                 )
         );
         }
+
+        @PostMapping(value = "/upload",consumes = "multipart/form-data")
+        public ResponseEntity<CompanyDestinationRateUploadResponseDto>
+        uploadRates(@RequestParam("file")
+            MultipartFile file,
+
+            @RequestParam("wefDate")
+            @DateTimeFormat(pattern = "yyyy-MM-dd")
+            LocalDate wefDate) {
+
+        CompanyDestinationRateUploadResponseDto response =
+                rateService.uploadRates(
+                        file,
+                        wefDate
+                );
+
+        return ResponseEntity.ok(response);
+    }
 
 }
