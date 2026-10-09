@@ -130,23 +130,17 @@ public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
                         new OwnerDestinationRateResponse();
 
                 response.setId(rate.getId());
+                response.setOwnerId(rate.getOwner().getId());
+                response.setOwnerName(rate.getOwner().getOwnerName());
                 response.setFromDate(rate.getFromDate());
                 response.setToDate(rate.getToDate());
                 response.setCompanyRate(rate.getCompanyRate());
-
-                response.setDestinationId(
-                        rate.getDestination().getId()
-                );
-                response.setDestinationName(
-                        rate.getDestination().getDestination()
-                );
-
-                response.setProductId(
-                        rate.getProduct().getId()
-                );
-                response.setProductName(
-                        rate.getProduct().getProductName()
-                );
+                response.setDestinationId(rate.getDestination().getId());
+                response.setDestinationName(rate.getDestination().getDestination());
+                response.setProductId(rate.getProduct().getId());
+                response.setProductName(rate.getProduct().getProductName());
+                response.setOwnerRate(rate.getOwnerRate());
+                response.setBenefit(rate.getBenefit());
 
                 return response;
             })
