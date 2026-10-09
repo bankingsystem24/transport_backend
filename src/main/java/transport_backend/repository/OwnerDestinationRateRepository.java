@@ -86,4 +86,12 @@ public interface OwnerDestinationRateRepository
                         @Param("destinationId") Long destinationId,
                         @Param("effectiveDate") LocalDate effectiveDate
         );
+
+        @Query("""
+                SELECT r FROM OwnerDestinationRate r
+                WHERE :date BETWEEN r.fromDate AND r.toDate
+                """)
+                List<OwnerDestinationRate> findRatesForDate(
+                        @Param("date") LocalDate date
+                );
 }

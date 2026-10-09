@@ -2,6 +2,7 @@ package transport_backend.controller;
 
 import jakarta.validation.Valid;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,9 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
-import transport_backend.dto.OwnerRateDateRequest;
 import transport_backend.service.OwnerDestinationRateService;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -40,22 +41,6 @@ public class OwnerDestinationRateController {
                 .body(rateService.create(request));
     }
 
-    // =========================================================
-    // GET ALL
-    // =========================================================
-
-    @GetMapping
-    public ResponseEntity<List<OwnerDestinationRateResponse>> getAll() {
-
-        return ResponseEntity.ok(
-                rateService.getAll()
-        );
-    }
-
-    // =========================================================
-    // GET BY ID
-    // =========================================================
-
     @GetMapping("/{id}")
     public ResponseEntity<OwnerDestinationRateResponse> getById(
             @PathVariable Long id) {
@@ -64,10 +49,6 @@ public class OwnerDestinationRateController {
                 rateService.getById(id)
         );
     }
-
-    // =========================================================
-    // UPDATE
-    // =========================================================
 
     @PutMapping("/{id}")
     public ResponseEntity<OwnerDestinationRateResponse> update(
@@ -78,11 +59,6 @@ public class OwnerDestinationRateController {
                 rateService.update(id, request)
         );
     }
-
-    // =========================================================
-    // DELETE
-    // =========================================================
-
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
             @PathVariable Long id) {
@@ -111,12 +87,13 @@ public class OwnerDestinationRateController {
                 );
         }
 
-        @PostMapping("/bulk")
-        public ResponseEntity<List<OwnerDestinationRateResponse>> getAllOwnerRates(
-                @RequestBody OwnerRateDateRequest request) {
+        @GetMapping
+        public ResponseEntity<List<OwnerDestinationRateResponse>> getAll(
+                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                LocalDate date) {
 
         return ResponseEntity.ok(
-                rateService.getAllOwnerRates(request.getDate())
+                rateService.getAll(date)
         );
         }
 

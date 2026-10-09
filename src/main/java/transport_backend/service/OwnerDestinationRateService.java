@@ -45,11 +45,6 @@ public class OwnerDestinationRateService {
         this.productRepository = productRepository;
         this.destinationRepository = destinationRepository;
     }
-
-    // =========================================================
-    // CREATE
-    // =========================================================
-
     public OwnerDestinationRateResponse create(
             OwnerDestinationRateRequest request) {
 
@@ -87,7 +82,6 @@ public class OwnerDestinationRateService {
                                 )
                         );
 
-        // Check overlapping date range
         List<OwnerDestinationRate> overlappingRates =
                 rateRepository.findOverlappingRates(
                         request.getOwnerId(),
@@ -111,14 +105,10 @@ public class OwnerDestinationRateService {
         rate.setOwner(owner);
         rate.setProduct(product);
         rate.setDestination(destination);
-
         rate.setFromDate(request.getFromDate());
         rate.setToDate(request.getToDate());
-
         rate.setCompanyRate(request.getCompanyRate());
         rate.setOwnerRate(request.getOwnerRate());
-
-        // Benefit = Company Rate - Owner Rate
         BigDecimal benefit =
                 request.getCompanyRate()
                         .subtract(request.getOwnerRate());
@@ -131,22 +121,37 @@ public class OwnerDestinationRateService {
         return mapToResponse(saved);
     }
 
-    // =========================================================
-    // GET ALL
-    // =========================================================
+public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
 
-    @Transactional(readOnly = true)
-    public List<OwnerDestinationRateResponse> getAll() {
+    return rateRepository.findRatesForDate(date)
+            .stream()
+            .map(rate -> {
+                OwnerDestinationRateResponse response =
+                        new OwnerDestinationRateResponse();
 
-        return rateRepository.findAll()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
+                response.setId(rate.getId());
+                response.setFromDate(rate.getFromDate());
+                response.setToDate(rate.getToDate());
+                response.setCompanyRate(rate.getCompanyRate());
 
-    // =========================================================
-    // GET BY ID
-    // =========================================================
+                response.setDestinationId(
+                        rate.getDestination().getId()
+                );
+                response.setDestinationName(
+                        rate.getDestination().getDestination()
+                );
+
+                response.setProductId(
+                        rate.getProduct().getId()
+                );
+                response.setProductName(
+                        rate.getProduct().getProductName()
+                );
+
+                return response;
+            })
+            .toList();
+}
 
     @Transactional(readOnly = true)
     public OwnerDestinationRateResponse getById(Long id) {
@@ -162,10 +167,6 @@ public class OwnerDestinationRateService {
 
         return mapToResponse(rate);
     }
-
-    // =========================================================
-    // UPDATE
-    // =========================================================
 
     public OwnerDestinationRateResponse update(
             Long id,
@@ -214,7 +215,6 @@ public class OwnerDestinationRateService {
                                 )
                         );
 
-        // Check overlap but exclude current record
         List<OwnerDestinationRate> overlappingRates =
                 rateRepository.findOverlappingRatesForUpdate(
                         id,
@@ -256,10 +256,6 @@ public class OwnerDestinationRateService {
         return mapToResponse(updated);
     }
 
-    // =========================================================
-    // DELETE
-    // =========================================================
-
     public void delete(Long id) {
 
         OwnerDestinationRate rate =
@@ -273,10 +269,6 @@ public class OwnerDestinationRateService {
 
         rateRepository.delete(rate);
     }
-
-    // =========================================================
-    // DATE VALIDATION
-    // =========================================================
 
     private void validateDates(
             LocalDate fromDate,
@@ -296,11 +288,6 @@ public class OwnerDestinationRateService {
             );
         }
     }
-
-    // =========================================================
-    // ENTITY -> RESPONSE
-    // =========================================================
-
     private OwnerDestinationRateResponse mapToResponse(
             OwnerDestinationRate rate) {
 
@@ -345,10 +332,6 @@ public class OwnerDestinationRateService {
                 Long productId = item.getProductId();
                 Long destinationId = item.getDestinationId();
 
-                /*
-                * Prevent duplicate owner + product + destination
-                * in the same request
-                */
                 String requestKey =
                         ownerId + "_" + productId + "_" + destinationId;
 
@@ -362,9 +345,6 @@ public class OwnerDestinationRateService {
                                 + destinationId);
                 }
 
-                /*
-                * Validate Owner
-                */
                 OwnerMaster owner = ownerRepository
                         .findById(ownerId)
                         .orElseThrow(() ->
@@ -372,9 +352,6 @@ public class OwnerDestinationRateService {
                                         "Owner not found with id: "
                                                 + ownerId));
 
-                /*
-                * Validate Product
-                */
                 ProductMaster product = productRepository
                         .findById(productId)
                         .orElseThrow(() ->
@@ -382,9 +359,6 @@ public class OwnerDestinationRateService {
                                         "Product not found with id: "
                                                 + productId));
 
-                /*
-                * Validate Destination
-                */
                 DestinationMaster destination = destinationRepository
                         .findById(destinationId)
                         .orElseThrow(() ->
@@ -392,10 +366,6 @@ public class OwnerDestinationRateService {
                                         "Destination not found with id: "
                                                 + destinationId));
 
-                /*
-                * Check whether a record already exists
-                * starting on the effective date.
-                */
                 boolean alreadyExists =
                         rateRepository
                                 .existsByOwner_IdAndProduct_IdAndDestination_IdAndFromDate(
@@ -417,9 +387,7 @@ public class OwnerDestinationRateService {
                                 + effectiveDate);
                 }
 
-                /*
-                * Find current applicable owner rate
-                */
+
                 OwnerDestinationRate existing =
                         rateRepository.findApplicableRate(
                                 ownerId,
@@ -428,9 +396,6 @@ public class OwnerDestinationRateService {
                                 effectiveDate
                         ).orElse(null);
 
-                /*
-                * Close existing rate
-                */
                 if (existing != null) {
 
                 existing.setToDate(previousDate);
@@ -438,30 +403,16 @@ public class OwnerDestinationRateService {
                 rateRepository.save(existing);
                 }
 
-                /*
-                * Create new owner rate
-                */
                 OwnerDestinationRate newRate =
                         new OwnerDestinationRate();
 
                 newRate.setOwner(owner);
                 newRate.setProduct(product);
                 newRate.setDestination(destination);
-
                 newRate.setFromDate(effectiveDate);
                 newRate.setToDate(newToDate);
-
-                /*
-                * Company rate comes from the request/current
-                * company destination rate.
-                */
                 newRate.setCompanyRate(item.getCompanyRate());
-
                 newRate.setOwnerRate(item.getOwnerRate());
-
-                /*
-                * Benefit = Company Rate - Owner Rate
-                */
                 newRate.setBenefit(
                         item.getCompanyRate()
                                 .subtract(item.getOwnerRate())
@@ -477,39 +428,39 @@ public class OwnerDestinationRateService {
         List<OwnerDestinationRate> ownerRates =
             rateRepository.findAll();
 
-    for (OwnerDestinationRate ownerRate : ownerRates) {
+        for (OwnerDestinationRate ownerRate : ownerRates) 
+        {
+                Long productId = ownerRate.getProduct().getId();
+                Long destinationId = ownerRate.getDestination().getId();
 
-        Long productId = ownerRate.getProduct().getId();
-        Long destinationId = ownerRate.getDestination().getId();
+                Optional<CompanyDestinationRate> companyRateOptional =
+                        rateRepository.findApplicableRate(
+                                productId,
+                                destinationId,
+                                effectiveDate
+                        );
 
-        Optional<CompanyDestinationRate> companyRateOptional =
-                rateRepository.findApplicableRate(
-                        productId,
-                        destinationId,
-                        effectiveDate
+                if (companyRateOptional.isPresent()) {
+
+                CompanyDestinationRate companyRate =
+                        companyRateOptional.get();
+
+                BigDecimal companyRateValue =
+                        companyRate.getCompanyRate();
+
+                ownerRate.setCompanyRate(companyRateValue);
+
+                ownerRate.setBenefit(
+                        companyRateValue.subtract(
+                                ownerRate.getOwnerRate()
+                        )
                 );
-
-        if (companyRateOptional.isPresent()) {
-
-            CompanyDestinationRate companyRate =
-                    companyRateOptional.get();
-
-            BigDecimal companyRateValue =
-                    companyRate.getCompanyRate();
-
-            ownerRate.setCompanyRate(companyRateValue);
-
-            ownerRate.setBenefit(
-                    companyRateValue.subtract(
-                            ownerRate.getOwnerRate()
-                    )
-            );
+                }
         }
-    }
 
-    return ownerRates.stream()
+          return ownerRates.stream()
             .map(this::mapToResponse)
             .toList();
-}
+        }
 
 }
