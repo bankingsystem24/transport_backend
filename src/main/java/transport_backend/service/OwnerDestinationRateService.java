@@ -13,11 +13,11 @@ import transport_backend.entity.OwnerDestinationRate;
 import transport_backend.entity.OwnerMaster;
 import transport_backend.entity.ProductMaster;
 import transport_backend.exception.ResourceNotFoundException;
-import transport_backend.repository.DestinationMasterRepository;
-import transport_backend.repository.OwnerDestinationRateRepository;
-import transport_backend.repository.OwnerMasterRepository;
-import transport_backend.repository.ProductMasterRepository;
-
+import org.apache.poi.ss.usermodel.*;
+import org.springframework.web.multipart.MultipartFile;
+import transport_backend.repository.*;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -33,17 +33,25 @@ public class OwnerDestinationRateService {
     private final OwnerMasterRepository ownerRepository;
     private final ProductMasterRepository productRepository;
     private final DestinationMasterRepository destinationRepository;
+    private final OwnerDestinationRateRepository ownerRateRepository;
+    private final CompanyDestinationRateRepository companyRateRepository;
+
 
     public OwnerDestinationRateService(
             OwnerDestinationRateRepository rateRepository,
             OwnerMasterRepository ownerRepository,
             ProductMasterRepository productRepository,
-            DestinationMasterRepository destinationRepository) {
+            DestinationMasterRepository destinationRepository,
+            OwnerDestinationRateRepository ownerRateRepository,
+            CompanyDestinationRateRepository companyRateRepository
+            ) {
 
         this.rateRepository = rateRepository;
         this.ownerRepository = ownerRepository;
         this.productRepository = productRepository;
         this.destinationRepository = destinationRepository;
+        this.ownerRateRepository = ownerRateRepository;
+        this.companyRateRepository = companyRateRepository;
     }
     public OwnerDestinationRateResponse create(
             OwnerDestinationRateRequest request) {
@@ -457,4 +465,172 @@ public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
             .toList();
         }
 
+    @Transactional
+    public int uploadExcel(MultipartFile file, LocalDate wefDate) {
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Excel file is required");
+        }
+
+        List<OwnerDestinationRate> records = new ArrayList<>();
+
+        try (InputStream inputStream = file.getInputStream();
+             Workbook workbook = WorkbookFactory.create(inputStream)) {
+
+            Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter formatter = new DataFormatter();
+
+            for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+
+                Row row = sheet.getRow(i);
+
+                if (row == null || isBlank(row, formatter)) {
+                    continue;
+                }
+
+                int excelRow = i + 1;
+
+                try {
+                    Long ownerId = getLong(row, 0, formatter);
+                    Long productId = getLong(row, 2, formatter);
+                    Long destinationId = getLong(row, 4, formatter);
+                //     BigDecimal ownerRate = getDecimal(row, 6, formatter);
+                    BigDecimal revisedRate = getDecimal(row, 7, formatter);
+
+                    OwnerMaster owner = ownerRepository
+                            .findById(ownerId)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Owner not found: " + ownerId));
+
+                    ProductMaster product = productRepository
+                            .findById(productId)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Product not found: " + productId));
+
+                    DestinationMaster destination = destinationRepository
+                            .findById(destinationId)
+                            .orElseThrow(() -> new IllegalArgumentException(
+                                    "Destination not found: " + destinationId));
+
+                        CompanyDestinationRate companyRate = companyRateRepository
+                        .findFirstByProduct_IdAndDestination_IdAndFromDateLessThanEqualAndToDateGreaterThanEqual(
+                                productId,
+                                destinationId,
+                                wefDate,
+                                wefDate
+                        )
+                        .orElseThrow(() -> new IllegalArgumentException(
+                                "No applicable company rate for product "
+                                + productId + ", destination "
+                                + destinationId + ", date " + wefDate
+                        ));
+
+
+                    BigDecimal companyRateValue =
+                            companyRate.getCompanyRate();
+
+                    BigDecimal benefit =
+                            companyRateValue.subtract(revisedRate);
+
+                    OwnerDestinationRate record =
+                            new OwnerDestinationRate();
+
+                    record.setOwner(owner);
+                    record.setProduct(product);
+                    record.setDestination(destination);
+                    record.setFromDate(wefDate);
+                    record.setToDate(wefDate.plusYears(10));
+                    record.setCompanyRate(companyRateValue);
+                    record.setOwnerRate(revisedRate);
+                    record.setBenefit(benefit);
+
+                    records.add(record);
+
+                } catch (RuntimeException ex) {
+                    throw new IllegalArgumentException(
+                            "Error in Excel row " + excelRow + ": "
+                            + ex.getMessage(), ex);
+                }
+            }
+
+            if (records.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "No valid data rows found in Excel");
+            }
+
+            ownerRateRepository.saveAll(records);
+
+            return records.size();
+
+        } catch (IllegalArgumentException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(
+                    "Unable to read Excel file: " + ex.getMessage(), ex);
+        }
+    }
+
+    private Long getLong(
+            Row row, int column, DataFormatter formatter) {
+
+        String value = getCellValue(row, column, formatter);
+
+        try {
+            return new BigDecimal(value).longValueExact();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(
+                    "Invalid ID in column " + (column + 1)
+                    + ": " + value);
+        }
+    }
+
+    private BigDecimal getDecimal(
+            Row row, int column, DataFormatter formatter) {
+
+        String value = getCellValue(row, column, formatter);
+
+        try {
+            return new BigDecimal(value.replace(",", ""));
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(
+                    "Invalid rate in column " + (column + 1)
+                    + ": " + value);
+        }
+    }
+
+    private String getCellValue(
+            Row row, int column, DataFormatter formatter) 
+        {
+
+                Cell cell = row.getCell(column, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+
+                if (cell == null) {
+                throw new IllegalArgumentException("Missing value in column " + (column + 1));
+                }
+
+                String value = formatter.formatCellValue(cell).trim();
+
+                if (value.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Missing value in column " + (column + 1));
+                }
+
+        return value;
+    }
+
+        private boolean isBlank(Row row, DataFormatter formatter) {
+        for (int i = 0; i < 8; i++) {
+                Cell cell = row.getCell(
+                        i, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+
+                if (cell != null
+                        && !formatter.formatCellValue(cell).trim().isEmpty()) {
+                return false;
+                }
+        }
+
+        return true;
+        }
+
 }
+

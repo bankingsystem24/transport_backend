@@ -94,4 +94,12 @@ public interface OwnerDestinationRateRepository
                 List<OwnerDestinationRate> findRatesForDate(
                         @Param("date") LocalDate date
                 );
+
+            Optional<CompanyDestinationRate>
+                findFirstByProduct_IdAndDestination_IdAndFromDateLessThanEqualAndToDateGreaterThanEqual(
+            Long productId,
+            Long destinationId,
+            LocalDate fromDate,
+            LocalDate toDate
+    );
 }

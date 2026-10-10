@@ -59,6 +59,13 @@ public interface CompanyDestinationRateRepository
         LocalDate fromDate,
         LocalDate fromDate2);
 
+        Optional<CompanyDestinationRate>
+        findFirstByProduct_IdAndDestination_IdAndFromDateLessThanEqualAndToDateGreaterThanEqual(
+                Long productId,
+                Long destinationId,
+                LocalDate fromDate,
+                LocalDate toDate
+        );
 
 @Query("""
     SELECT r

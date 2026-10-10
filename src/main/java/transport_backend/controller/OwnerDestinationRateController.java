@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
@@ -95,6 +96,26 @@ public class OwnerDestinationRateController {
         return ResponseEntity.ok(
                 rateService.getAll(date)
         );
+        }
+
+        @PostMapping(
+        value = "/upload",
+        consumes = "multipart/form-data"
+        )
+        public ResponseEntity<Map<String, Object>> uploadExcel(
+                @RequestParam("file") MultipartFile file,
+                @RequestParam("wefDate")
+                @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                LocalDate wefDate) {
+
+                int count = rateService.uploadExcel(file, wefDate);
+
+                return ResponseEntity.ok(Map.of(
+                        "message", "Owner destination rates uploaded successfully",
+                        "recordsInserted", count,
+                        "wefDate", wefDate,
+                        "toDate", wefDate.plusYears(10)
+                ));
         }
 
 }
