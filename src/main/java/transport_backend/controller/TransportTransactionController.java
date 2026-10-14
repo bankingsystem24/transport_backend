@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import transport_backend.dto.DashboardTransactionResponse;
 import transport_backend.dto.TransportTransactionReportResponse;
 import transport_backend.dto.TransportTransactionRequest;
 import transport_backend.dto.TransportTransactionResponse;
@@ -107,5 +108,31 @@ public class TransportTransactionController {
 
                 return ResponseEntity.ok(transactions);
         }
+
+@GetMapping("/dashboard")
+public ResponseEntity<List<DashboardTransactionResponse>> getDashboardTransactions(
+        @RequestParam(required = false) String fromDate,
+        @RequestParam(required = false) String toDate,
+        Authentication authentication) {
+
+    JwtAuthenticationDetails details =
+            (JwtAuthenticationDetails) authentication.getDetails();
+
+    Long companyId = details.getCompanyId();
+
+    LocalDate startDate = parseDate(fromDate);
+    LocalDate endDate = parseDate(toDate);
+
+    return ResponseEntity.ok(
+            transportTransactionService.getDashboardTransactions(
+                    companyId, startDate, endDate));
+}
+
+private LocalDate parseDate(String value) {
+    if (value == null || value.isBlank() || "null".equalsIgnoreCase(value)) {
+        return null;
+    }
+    return LocalDate.parse(value);
+}
 
 }

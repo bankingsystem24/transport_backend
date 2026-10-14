@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import transport_backend.dto.DashboardTransactionResponse;
 import transport_backend.entity.TransportTransaction;
 
 public interface TransportTransactionRepository
@@ -64,4 +65,76 @@ public interface TransportTransactionRepository
                 String lrNo,
                 String invoiceNo
         );
+
+        
+
+
+    @Query("""
+        SELECT new transport_backend.dto.DashboardTransactionResponse(
+            c.id,
+            c.companyName,
+            p.id,
+            p.productName,
+            o.id,
+            o.ownerName,
+            t.partyName,
+            d.id,
+            d.destination,
+            t.diDate,
+            t.totalAmount,
+            t.dieselAmount,
+            t.parkingCharges,
+            t.advance,
+            t.otherPay,
+            t.tripBalance,
+            t.profitAmount
+        )
+        FROM TransportTransaction t
+        JOIN t.company c
+        JOIN t.product p
+        LEFT JOIN t.owner o
+        LEFT JOIN t.destination d
+        WHERE c.id = :companyId
+          AND t.diDate >= :fromDate
+          AND t.diDate <= :toDate
+        ORDER BY t.diDate DESC
+        """)
+    List<DashboardTransactionResponse> findDashboardTransactions(
+            @Param("companyId") Long companyId,
+            @Param("fromDate") LocalDate fromDate,
+            @Param("toDate") LocalDate toDate);
+
+
+        @Query("""
+        SELECT new transport_backend.dto.DashboardTransactionResponse(
+                c.id,
+                c.companyName,
+                p.id,
+                p.productName,
+                o.id,
+                o.ownerName,
+                t.partyName,
+                d.id,
+                d.destination,
+                t.diDate,
+                t.totalAmount,
+                t.dieselAmount,
+                t.parkingCharges,
+                t.advance,
+                t.otherPay,
+                t.tripBalance,
+                t.profitAmount
+        )
+        FROM TransportTransaction t
+        JOIN t.company c
+        JOIN t.product p
+        LEFT JOIN t.owner o
+        LEFT JOIN t.destination d
+        WHERE c.id = :companyId
+        ORDER BY t.diDate DESC
+        """)
+        List<DashboardTransactionResponse> findDashboardTransactionsByCompanyId(
+                @Param("companyId") Long companyId);
+                
 }
+

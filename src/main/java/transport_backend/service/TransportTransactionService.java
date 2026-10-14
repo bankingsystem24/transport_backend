@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import transport_backend.dto.DashboardTransactionResponse;
 import transport_backend.dto.TransportTransactionReportResponse;
 import transport_backend.dto.TransportTransactionRequest;
 import transport_backend.dto.TransportTransactionResponse;
@@ -719,4 +720,25 @@ public class TransportTransactionService {
         return response;
         }
 
+
+        @Transactional(readOnly = true)
+        public List<DashboardTransactionResponse> getDashboardTransactions(
+                Long companyId,
+                LocalDate fromDate,
+                LocalDate toDate) {
+        if (fromDate == null && toDate == null) {
+                return transactionRepository.findDashboardTransactionsByCompanyId(companyId);
+        }
+        if (fromDate == null || toDate == null) {
+                throw new IllegalArgumentException(
+                        "Both fromDate and toDate must be provided together.");
+        }
+        if (fromDate.isAfter(toDate)) {
+                throw new IllegalArgumentException(
+                        "fromDate cannot be after toDate.");
+        }
+        return transactionRepository.findDashboardTransactions(
+                companyId, fromDate, toDate);
+        }
 }
+
