@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 "http://127.0.0.1:3000",
                                 "http://127.0.0.1:5173",
                                 "http://3.6.219.61",
-                                "http://coopmember.in:90",
+                                "http://ameytransport.in:90",
                                 "http://localhost"));
 
                 // HTTP methods
