@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
 import transport_backend.dto.MaxDestinationDieselQtyRequest;
 import transport_backend.dto.MaxDestinationDieselQtyResponse;
 import transport_backend.entity.CompanyMaster;
@@ -18,12 +17,21 @@ import transport_backend.repository.MaxDestinationDieselQtyRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class MaxDestinationDieselQtyService {
 
     private final MaxDestinationDieselQtyRepository repository;
     private final CompanyMasterRepository companyRepository;
     private final DestinationMasterRepository destinationRepository;
+
+    public MaxDestinationDieselQtyService(
+        MaxDestinationDieselQtyRepository repository,
+        CompanyMasterRepository companyRepository,
+        DestinationMasterRepository destinationRepository
+    ){
+        this.repository = repository;
+        this.companyRepository = companyRepository;
+        this.destinationRepository = destinationRepository;
+    }
 
     @Transactional
     public MaxDestinationDieselQtyResponse create(

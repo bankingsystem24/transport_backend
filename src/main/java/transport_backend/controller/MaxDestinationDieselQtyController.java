@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import transport_backend.dto.MaxDestinationDieselQtyRequest;
 import transport_backend.dto.MaxDestinationDieselQtyResponse;
 import transport_backend.security.JwtAuthenticationDetails;
@@ -22,10 +21,15 @@ import transport_backend.service.MaxDestinationDieselQtyService;
 
 @RestController
 @RequestMapping("/api/max-destination-diesel-qty")
-@RequiredArgsConstructor
 public class MaxDestinationDieselQtyController {
 
     private final MaxDestinationDieselQtyService service;
+
+    public MaxDestinationDieselQtyController(
+        MaxDestinationDieselQtyService service
+    ){
+        this.service = service;
+    }
 
     @PostMapping
     public ResponseEntity<MaxDestinationDieselQtyResponse> create(

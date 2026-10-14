@@ -1,6 +1,5 @@
 package transport_backend.service;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import transport_backend.entity.User;
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class VehicleImageService {
 
     private final VehicleMasterRepository vehicleRepository;
@@ -23,7 +21,17 @@ public class VehicleImageService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
 
-
+    public VehicleImageService(
+        VehicleMasterRepository vehicleRepository,
+        VehicleImageRepository vehicleImageRepository,
+        UserRepository userRepository,
+        S3Service s3Service
+        ){
+                this.vehicleRepository = vehicleRepository;
+                this.vehicleImageRepository = vehicleImageRepository;
+                this.userRepository = userRepository;
+                this.s3Service = s3Service;
+    }
     // =========================================================
     // UPLOAD IMAGE
     // =========================================================

@@ -1,7 +1,5 @@
 package transport_backend.service;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -16,12 +14,21 @@ import transport_backend.repository.CompanyProductMappingRepository;
 import transport_backend.repository.ProductMasterRepository;
 
 @Service
-@RequiredArgsConstructor
 public class CompanyProductMappingService {
 
     private final CompanyProductMappingRepository mappingRepository;
     private final CompanyMasterRepository companyRepository;
     private final ProductMasterRepository productRepository;
+
+    public CompanyProductMappingService(
+        CompanyProductMappingRepository mappingRepository,
+        CompanyMasterRepository companyRepository,
+        ProductMasterRepository productRepository
+    ){
+        this.mappingRepository = mappingRepository;
+        this.companyRepository = companyRepository;
+        this.productRepository = productRepository;
+    }
 
     public CompanyProductMapping saveOrUpdate(
             CompanyProductMappingRequest request, Long companyId) {

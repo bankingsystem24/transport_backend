@@ -1,6 +1,5 @@
 package transport_backend.controller;
 
-import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
@@ -14,10 +13,13 @@ import transport_backend.service.CompanyProductMappingService;
 
 @RestController
 @RequestMapping("/api/company-product")
-@RequiredArgsConstructor
 public class CompanyProductMappingController {
 
     private final CompanyProductMappingService service;
+
+    public CompanyProductMappingController(
+        CompanyProductMappingService service
+    ){ this.service = service;}
 
     @PostMapping                       //For create and Update
     public ResponseEntity<CompanyProductMapping> saveOrUpdate(

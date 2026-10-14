@@ -1,6 +1,5 @@
 package transport_backend.controller;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,12 +13,17 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/vehicle-images")
-@RequiredArgsConstructor
 public class VehicleImageController {
 
     private final VehicleImageService vehicleImageService;
     private final JwtUtil jwtUtil;
 
+    public VehicleImageController(VehicleImageService vehicleImageService,
+    JwtUtil jwtUtil
+    ){
+        this.vehicleImageService = vehicleImageService;
+        this.jwtUtil = jwtUtil;
+    }
     @PostMapping(
             value = "/upload",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
