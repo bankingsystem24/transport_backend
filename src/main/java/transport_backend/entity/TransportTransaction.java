@@ -7,7 +7,13 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "transport_transactions")
+@Table(name = "transport_transactions",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_di_invoice_lr",
+            columnNames = {"di_no", "invoice_no", "lr_no"}
+        )
+    })
 public class TransportTransaction {
 
     @Id
