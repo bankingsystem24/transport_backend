@@ -9,6 +9,56 @@
       "name": "jwt.expiration",
       "type": "java.lang.Long",
       "description": "JWT token expiration time in milliseconds."
+    },
+    {
+      "name": "sms.api-url",
+      "type": "java.lang.String",
+      "description": "SMS provider API URL."
+    },
+    {
+      "name": "sms.username",
+      "type": "java.lang.String",
+      "description": "SMS provider username."
+    },
+    {
+      "name": "sms.api-password",
+      "type": "java.lang.String",
+      "description": "SMS provider password."
+    },
+    {
+      "name": "sms.sender",
+      "type": "java.lang.String",
+      "description": "SMS sender ID."
+    },
+    {
+      "name": "sms.priority",
+      "type": "java.lang.String",
+      "description": "SMS delivery priority."
+    },
+    {
+      "name": "sms.entity-id",
+      "type": "java.lang.String",
+      "description": "SMS provider entity ID."
+    },
+    {
+      "name": "sms.template-id",
+      "type": "java.lang.String",
+      "description": "SMS template ID."
+    },
+    {
+      "name": "aws.profile",
+      "type": "java.lang.String",
+      "description": "AWS credentials profile name."
+    },
+    {
+      "name": "aws.s3.bucket-name",
+      "type": "java.lang.String",
+      "description": "AWS S3 bucket name."
+    },
+    {
+      "name": "aws.region",
+      "type": "java.lang.String",
+      "description": "AWS region for application resources."
     }
   ]
 }
