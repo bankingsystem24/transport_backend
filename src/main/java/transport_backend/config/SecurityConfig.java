@@ -46,15 +46,17 @@ public class SecurityConfig {
 
                 CorsConfiguration configuration = new CorsConfiguration();
 
-                // Frontend URLs
-                configuration.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:3000",
-                                "http://localhost:5173",
-                                "http://127.0.0.1:3000",
-                                "http://127.0.0.1:5173",
-                                "http://3.6.219.61",
-                                "http://ameytransport.in:90",
-                                "http://localhost"));
+configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "http://3.6.219.61",
+        "http://ameytransport.in:90",
+        "http://localhost",
+        "https://ameytransport.in",
+        "https://www.ameytransport.in"
+));
 
                 // HTTP methods
                 configuration.setAllowedMethods(Arrays.asList(
