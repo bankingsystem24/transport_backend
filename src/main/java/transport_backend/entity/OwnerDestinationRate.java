@@ -13,6 +13,10 @@ public class OwnerDestinationRate {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "company_id", nullable = false)
+    private CompanyMaster company;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     private OwnerMaster owner;
 
@@ -113,4 +117,13 @@ public class OwnerDestinationRate {
     public void setBenefit(BigDecimal benefit) {
         this.benefit = benefit;
     }
+
+    public CompanyMaster getCompany() {
+        return company;
+    }
+
+    public void setCompany(CompanyMaster company) {
+        this.company = company;
+    }
+    
 }

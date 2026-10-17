@@ -5,12 +5,14 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
+import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.OwnerDestinationRateService;
 
 import java.time.LocalDate;
@@ -29,17 +31,28 @@ public class OwnerDestinationRateController {
         this.rateService = rateService;
     }
 
+        private Long getCompanyId(Authentication authentication) {
+        JwtAuthenticationDetails details =
+                (JwtAuthenticationDetails) authentication.getDetails();
+
+        return details.getCompanyId();
+    }
+
+
     // =========================================================
     // CREATE
     // =========================================================
 
     @PostMapping
     public ResponseEntity<OwnerDestinationRateResponse> create(
-            @Valid @RequestBody OwnerDestinationRateRequest request) {
+            @Valid @RequestBody OwnerDestinationRateRequest request,
+            Authentication authentication) {
+
+        Long companyId = getCompanyId(authentication);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(rateService.create(request));
+                .body(rateService.create(request,companyId));
     }
 
     @GetMapping("/{id}")
@@ -54,12 +67,17 @@ public class OwnerDestinationRateController {
     @PutMapping("/{id}")
     public ResponseEntity<OwnerDestinationRateResponse> update(
             @PathVariable Long id,
-            @Valid @RequestBody OwnerDestinationRateRequest request) {
+            @Valid @RequestBody OwnerDestinationRateRequest request,
+            Authentication authentication) {
+
+        Long companyId = getCompanyId(authentication);
 
         return ResponseEntity.ok(
-                rateService.update(id, request)
+                rateService.update(id, request,companyId)
         );
     }
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(
             @PathVariable Long id) {
@@ -91,11 +109,14 @@ public class OwnerDestinationRateController {
         @GetMapping
         public ResponseEntity<List<OwnerDestinationRateResponse>> getAll(
                 @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                LocalDate date) {
+                LocalDate date,Authentication authentication) 
+        {
 
-        return ResponseEntity.ok(
-                rateService.getAll(date)
-        );
+                Long companyId = getCompanyId(authentication);
+
+                return ResponseEntity.ok(
+                        rateService.getAll(date,companyId)
+                );
         }
 
         @PostMapping(

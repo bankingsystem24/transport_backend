@@ -20,7 +20,7 @@ public class OwnerBankDetailsController {
         this.bankService = bankService;
     }
 
-    // CREATE
+    // CREATE 
     @PostMapping
     public ResponseEntity<OwnerBankDetailsDTO> create(
             @RequestBody OwnerBankDetailsDTO dto) {

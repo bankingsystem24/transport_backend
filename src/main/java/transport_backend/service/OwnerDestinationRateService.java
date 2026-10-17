@@ -8,6 +8,7 @@ import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionItem;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
 import transport_backend.entity.CompanyDestinationRate;
+import transport_backend.entity.CompanyMaster;
 import transport_backend.entity.DestinationMaster;
 import transport_backend.entity.OwnerDestinationRate;
 import transport_backend.entity.OwnerMaster;
@@ -35,6 +36,7 @@ public class OwnerDestinationRateService {
     private final DestinationMasterRepository destinationRepository;
     private final OwnerDestinationRateRepository ownerRateRepository;
     private final CompanyDestinationRateRepository companyRateRepository;
+    private final CompanyMasterRepository companyMasterRepository;
 
 
     public OwnerDestinationRateService(
@@ -43,7 +45,8 @@ public class OwnerDestinationRateService {
             ProductMasterRepository productRepository,
             DestinationMasterRepository destinationRepository,
             OwnerDestinationRateRepository ownerRateRepository,
-            CompanyDestinationRateRepository companyRateRepository
+            CompanyDestinationRateRepository companyRateRepository,
+            CompanyMasterRepository companyMasterRepository
             ) {
 
         this.rateRepository = rateRepository;
@@ -52,14 +55,22 @@ public class OwnerDestinationRateService {
         this.destinationRepository = destinationRepository;
         this.ownerRateRepository = ownerRateRepository;
         this.companyRateRepository = companyRateRepository;
+        this.companyMasterRepository = companyMasterRepository;
     }
-    public OwnerDestinationRateResponse create(
-            OwnerDestinationRateRequest request) {
+
+        public OwnerDestinationRateResponse create(
+            OwnerDestinationRateRequest request, Long companyId) {
 
         validateDates(
                 request.getFromDate(),
                 request.getToDate()
         );
+
+            // Fetch company from JWT companyId
+        CompanyMaster company = companyMasterRepository.findById(companyId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "Company not found with id: " + companyId
+            ));
 
         OwnerMaster owner =
                 ownerRepository.findById(request.getOwnerId())
@@ -96,7 +107,8 @@ public class OwnerDestinationRateService {
                         request.getProductId(),
                         request.getDestinationId(),
                         request.getFromDate(),
-                        request.getToDate()
+                        request.getToDate(),
+                        companyId
                 );
 
         if (!overlappingRates.isEmpty()) {
@@ -109,7 +121,7 @@ public class OwnerDestinationRateService {
 
         OwnerDestinationRate rate =
                 new OwnerDestinationRate();
-
+        rate.setCompany(company);
         rate.setOwner(owner);
         rate.setProduct(product);
         rate.setDestination(destination);
@@ -127,33 +139,44 @@ public class OwnerDestinationRateService {
                 rateRepository.save(rate);
 
         return mapToResponse(saved);
-    }
+        }
 
-public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
+        public List<OwnerDestinationRateResponse> getAll(
+                LocalDate date, Long companyId) {
 
-    return rateRepository.findRatesForDate(date)
-            .stream()
-            .map(rate -> {
-                OwnerDestinationRateResponse response =
-                        new OwnerDestinationRateResponse();
+        return rateRepository.findRatesForDateAndCompany(date, companyId)
+                .stream()
+                .map(rate -> {
+                        OwnerDestinationRateResponse response =
+                                new OwnerDestinationRateResponse();
 
-                response.setId(rate.getId());
-                response.setOwnerId(rate.getOwner().getId());
-                response.setOwnerName(rate.getOwner().getOwnerName());
-                response.setFromDate(rate.getFromDate());
-                response.setToDate(rate.getToDate());
-                response.setCompanyRate(rate.getCompanyRate());
-                response.setDestinationId(rate.getDestination().getId());
-                response.setDestinationName(rate.getDestination().getDestination());
-                response.setProductId(rate.getProduct().getId());
-                response.setProductName(rate.getProduct().getProductName());
-                response.setOwnerRate(rate.getOwnerRate());
-                response.setBenefit(rate.getBenefit());
+                        response.setId(rate.getId());
 
-                return response;
-            })
-            .toList();
-}
+                        response.setOwnerId(rate.getOwner().getId());
+                        response.setOwnerName(rate.getOwner().getOwnerName());
+
+                        response.setFromDate(rate.getFromDate());
+                        response.setToDate(rate.getToDate());
+
+                        response.setCompanyRate(rate.getCompanyRate());
+
+                        response.setDestinationId(
+                                rate.getDestination().getId());
+                        response.setDestinationName(
+                                rate.getDestination().getDestination());
+
+                        response.setProductId(rate.getProduct().getId());
+                        response.setProductName(
+                                rate.getProduct().getProductName());
+
+                        response.setOwnerRate(rate.getOwnerRate());
+                        response.setBenefit(rate.getBenefit());
+
+                        return response;
+                })
+                .toList();
+        }
+
 
     @Transactional(readOnly = true)
     public OwnerDestinationRateResponse getById(Long id) {
@@ -172,7 +195,7 @@ public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
 
     public OwnerDestinationRateResponse update(
             Long id,
-            OwnerDestinationRateRequest request) {
+            OwnerDestinationRateRequest request,Long companyId) {
 
         validateDates(
                 request.getFromDate(),
@@ -180,7 +203,7 @@ public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
         );
 
         OwnerDestinationRate rate =
-                rateRepository.findById(id)
+                rateRepository.findByIdAndCompany_Id(id,companyId)
                         .orElseThrow(() ->
                                 new ResourceNotFoundException(
                                         "Owner destination rate not found with id: "
@@ -224,7 +247,8 @@ public List<OwnerDestinationRateResponse> getAll(LocalDate date) {
                         request.getProductId(),
                         request.getDestinationId(),
                         request.getFromDate(),
-                        request.getToDate()
+                        request.getToDate(),
+                        companyId
                 );
 
         if (!overlappingRates.isEmpty()) {

@@ -26,6 +26,9 @@ public class OwnerBankDetails {
     @Column(name = "account_no", nullable = false, length = 30)
     private String accountNo;
 
+    @Column(name = "account_name", nullable = false, length = 100)
+    private String accountName;
+
     @Column(name = "bank_name", nullable = false, length = 100)
     private String bankName;
 
@@ -68,6 +71,14 @@ public class OwnerBankDetails {
 
     public void setBankName(String bankName) {
         this.bankName = bankName;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public String getIfscCode() {

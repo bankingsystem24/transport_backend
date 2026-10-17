@@ -6,6 +6,7 @@ public class OwnerBankDetailsDTO {
     private Long ownerId;
     private String ownerName;
     private String accountNo;
+    private String accountName;
     private String bankName;
     private String ifscCode;
     private String branch;
@@ -35,6 +36,14 @@ public class OwnerBankDetailsDTO {
 
     public void setOwnerName(String ownerName) {
         this.ownerName = ownerName;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 
     public String getAccountNo() {

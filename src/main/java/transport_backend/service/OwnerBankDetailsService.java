@@ -30,16 +30,11 @@ public class OwnerBankDetailsService {
     public OwnerBankDetailsDTO create(OwnerBankDetailsDTO dto) {
 
         validate(dto);
-
         OwnerMaster owner = getOwner(dto.getOwnerId());
-
         checkDuplicate(dto.getOwnerId(), dto.getAccountNo(), null);
-
         OwnerBankDetails bank = new OwnerBankDetails();
         bank.setOwner(owner);
-
         copyFields(dto, bank);
-
         return toDTO(bankRepository.save(bank));
     }
 
@@ -168,6 +163,7 @@ public class OwnerBankDetailsService {
 
         dto.setAccountNo(dto.getAccountNo().trim());
         dto.setBankName(dto.getBankName().trim());
+        dto.setBankName(dto.getBankName());
         dto.setIfscCode(dto.getIfscCode().trim().toUpperCase());
 
         if (dto.getBranch() != null) {
@@ -179,6 +175,7 @@ public class OwnerBankDetailsService {
             OwnerBankDetailsDTO dto, OwnerBankDetails bank) {
 
         bank.setAccountNo(dto.getAccountNo());
+        bank.setAccountName(dto.getAccountName());
         bank.setBankName(dto.getBankName());
         bank.setIfscCode(dto.getIfscCode());
         bank.setBranch(dto.getBranch());
@@ -192,6 +189,7 @@ public class OwnerBankDetailsService {
         dto.setOwnerId(bank.getOwner().getId());
         dto.setOwnerName(bank.getOwner().getOwnerName());
         dto.setAccountNo(bank.getAccountNo());
+        dto.setAccountName(bank.getAccountName());
         dto.setBankName(bank.getBankName());
         dto.setIfscCode(bank.getIfscCode());
         dto.setBranch(bank.getBranch());

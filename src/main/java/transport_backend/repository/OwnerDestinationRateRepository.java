@@ -14,6 +14,11 @@ import java.util.Optional;
 public interface OwnerDestinationRateRepository
         extends JpaRepository<OwnerDestinationRate, Long> {
 
+        Optional<OwnerDestinationRate> findByIdAndCompany_Id(
+        Long id,
+        Long companyId
+);
+
     @Query("""
         SELECT r
         FROM OwnerDestinationRate r
@@ -22,13 +27,15 @@ public interface OwnerDestinationRateRepository
           AND r.destination.id = :destinationId
           AND r.fromDate <= :toDate
           AND r.toDate >= :fromDate
+          AND r.company.id = :companyId
     """)
     List<OwnerDestinationRate> findOverlappingRates(
             @Param("ownerId") Long ownerId,
             @Param("productId") Long productId,
             @Param("destinationId") Long destinationId,
             @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate
+            @Param("toDate") LocalDate toDate,
+            @Param("companyId") Long companyId
     );
 
     @Query("""
@@ -40,6 +47,7 @@ public interface OwnerDestinationRateRepository
           AND r.destination.id = :destinationId
           AND r.fromDate <= :toDate
           AND r.toDate >= :fromDate
+          AND r.company.id = :companyId
     """)
     List<OwnerDestinationRate> findOverlappingRatesForUpdate(
             @Param("id") Long id,
@@ -47,7 +55,8 @@ public interface OwnerDestinationRateRepository
             @Param("productId") Long productId,
             @Param("destinationId") Long destinationId,
             @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate
+            @Param("toDate") LocalDate toDate,
+            @Param("companyId") Long companyId
     );
 
     boolean existsByOwner_IdAndProduct_IdAndDestination_IdAndFromDate(
@@ -87,13 +96,15 @@ public interface OwnerDestinationRateRepository
                         @Param("effectiveDate") LocalDate effectiveDate
         );
 
-        @Query("""
-                SELECT r FROM OwnerDestinationRate r
-                WHERE :date BETWEEN r.fromDate AND r.toDate
+                @Query("""
+                SELECT r
+                FROM OwnerDestinationRate r
+                WHERE r.company.id = :companyId
+                AND :date BETWEEN r.fromDate AND r.toDate
                 """)
-                List<OwnerDestinationRate> findRatesForDate(
-                        @Param("date") LocalDate date
-                );
+                List<OwnerDestinationRate> findRatesForDateAndCompany(
+                        @Param("date") LocalDate date,
+                        @Param("companyId") Long companyId);
 
             Optional<CompanyDestinationRate>
                 findFirstByProduct_IdAndDestination_IdAndFromDateLessThanEqualAndToDateGreaterThanEqual(
