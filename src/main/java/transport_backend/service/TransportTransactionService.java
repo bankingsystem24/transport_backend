@@ -100,6 +100,7 @@ public class TransportTransactionService {
                 TransportTransaction transaction = new TransportTransaction();
                 mapRequestToEntity(transaction, request);
                 transaction.setCreatedDate(LocalDateTime.now());
+                transaction.setDriverName(request.getDriverName());
                 TransportTransaction saved = transactionRepository.save(transaction);
 
                 saveLog(
@@ -260,6 +261,7 @@ public class TransportTransactionService {
                 transaction.setDcNo(request.getDcNo());
                 transaction.setRemarks(request.getRemarks());
                 transaction.setInvoiceDate(request.getInvoiceDate());
+                transaction.setDriverName(request.getDriverName());
 
                 if (transaction.getId() == null
                                 && request.getCreatedById() != null) {
@@ -570,6 +572,7 @@ public class TransportTransactionService {
                 response.setParkingCharges(transaction.getParkingCharges());
                 response.setPaymentDate(transaction.getPaymentDate());
                 response.setTripBalance(transaction.getTripBalance());
+                response.setDriverName(transaction.getDriverName());
                 if (transaction.getCreatedBy() != null) {
 
                         response.setCreatedById(
@@ -588,7 +591,8 @@ public class TransportTransactionService {
                 Boolean owner,
                 Long ownerId,
                 Boolean vehicle,
-                Long vehicleId) {
+                Long vehicleId,
+                Long companyId) {
 
         if (fromDate == null || toDate == null) {
                 throw new IllegalArgumentException(
@@ -605,10 +609,11 @@ public class TransportTransactionService {
         if (Boolean.TRUE.equals(owner) && ownerId != null) {
 
                 transactions = transactionRepository
-                        .findByDiDateBetweenAndOwner_Id(
+                        .findByDiDateBetweenAndOwner_IdAndCompany_Id(
                                 fromDate,
                                 toDate,
-                                ownerId);
+                                ownerId,
+                                companyId);
 
         } else if (Boolean.TRUE.equals(vehicle) && vehicleId != null) {
 
@@ -707,6 +712,7 @@ public class TransportTransactionService {
         response.setTripBalance(transaction.getTripBalance());
         response.setProfitRate(transaction.getProfitRate());
         response.setProfitAmount(transaction.getProfitAmount());
+        response.setDriverName(transaction.getDriverName());
 
         if (transaction.getCreatedBy() != null) {
                 response.setCreatedBy(transaction.getCreatedBy().getId());

@@ -83,6 +83,7 @@ public class TransportTransactionRequest {
     private String vehicleName;
     private String partyName;
     private String destinationName;
+    private String driverName;
 
     public TransportTransactionRequest() {
     }
@@ -415,5 +416,12 @@ public class TransportTransactionRequest {
         this.remarks = remarks;
     }
 
+    public String getDriverName(){
+        return driverName;
+    }
+
+    public void setDriverName(String driverName){
+        this.driverName = driverName;
+    }
 
 }

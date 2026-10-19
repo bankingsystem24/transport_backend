@@ -155,6 +155,9 @@ public class TransportTransaction {
     @Column(name = "created_date", nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
+    @Column(name = "driver_name", length = 70)
+    private String driverName;
+
     public TransportTransaction() {
     }
 
@@ -494,5 +497,13 @@ public class TransportTransaction {
 
     public void setProfitAmount(BigDecimal profitAmount) {
         this.profitAmount = profitAmount;
+    }
+
+    public String getDriverName(){
+        return driverName;
+    }
+
+    public void setDriverName(String driverName){
+        this.driverName = driverName;
     }
 }

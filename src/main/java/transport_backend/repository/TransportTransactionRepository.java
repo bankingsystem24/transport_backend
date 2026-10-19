@@ -19,10 +19,11 @@ public interface TransportTransactionRepository
                         LocalDate toDate);
 
         // Owner only
-        List<TransportTransaction> findByDiDateBetweenAndOwner_Id(
+        List<TransportTransaction> findByDiDateBetweenAndOwner_IdAndCompany_Id(
                         LocalDate fromDate,
                         LocalDate toDate,
-                        Long ownerId);
+                        Long ownerId,
+                        Long companyId);
 
         // Vehicle only
         List<TransportTransaction> findByDiDateBetweenAndVehicle_Id(

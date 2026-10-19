@@ -70,7 +70,7 @@ public class TransportTransactionResponse {
 
     private Long createdById;
     private LocalDateTime createdDate;
-
+    private String driverName;
 
     // Constructor
 
@@ -454,6 +454,14 @@ public class TransportTransactionResponse {
 
     public void setRemarks(String remarks) {
         this.remarks = remarks;
+    }
+
+    public String getDriverName(){
+        return driverName;
+    }
+
+    public void setDriverName(String driverName){
+        this.driverName = driverName;
     }
 
 }

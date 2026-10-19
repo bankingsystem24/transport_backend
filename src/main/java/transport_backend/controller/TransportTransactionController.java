@@ -83,10 +83,13 @@ public class TransportTransactionController {
                         @RequestParam(required = false, defaultValue = "false") Boolean owner,
                         @RequestParam(required = false) String ownerId,
                         @RequestParam(required = false, defaultValue = "false") Boolean vehicle,
-                        @RequestParam(required = false) String vehicleId) {
+                        @RequestParam(required = false) String vehicleId,
+                        Authentication authentication) {
 
                 Long parsedOwnerId = null;
                 Long parsedVehicleId = null;
+                JwtAuthenticationDetails details = (JwtAuthenticationDetails) authentication.getDetails();
+                Long companyId = details.getCompanyId();
 
                 if (ownerId != null && !ownerId.equalsIgnoreCase("null")
                                 && !ownerId.isBlank()) {
@@ -104,7 +107,8 @@ public class TransportTransactionController {
                                 owner,
                                 parsedOwnerId,
                                 vehicle,
-                                parsedVehicleId);
+                                parsedVehicleId,
+                                companyId);
 
                 return ResponseEntity.ok(transactions);
         }

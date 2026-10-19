@@ -67,6 +67,7 @@ public class TransportTransactionReportResponse {
     private LocalDateTime createdDate;
     private BigDecimal profitRate;
     private BigDecimal profitAmount;
+    private String driverName;
 
     public TransportTransactionReportResponse() {
     }
@@ -414,5 +415,13 @@ public class TransportTransactionReportResponse {
 
     public void setProfitAmount(BigDecimal profitAmount) {
         this.profitAmount = profitAmount;
+    }
+
+    public String getDriverName(){
+        return driverName;
+    }
+
+    public void setDriverName(String driverName){
+        this.driverName = driverName;
     }
 }
