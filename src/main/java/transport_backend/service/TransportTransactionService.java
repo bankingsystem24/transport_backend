@@ -618,17 +618,19 @@ public class TransportTransactionService {
         } else if (Boolean.TRUE.equals(vehicle) && vehicleId != null) {
 
                 transactions = transactionRepository
-                        .findByDiDateBetweenAndVehicle_Id(
+                        .findByDiDateBetweenAndVehicle_IdAndCompany_Id(
                                 fromDate,
                                 toDate,
-                                vehicleId);
+                                vehicleId,
+                                companyId);
 
         } else {
 
                 transactions = transactionRepository
-                        .findByDiDateBetween(
+                        .findByDiDateBetweenAndCompany_Id(
                                 fromDate,
-                                toDate);
+                                toDate,
+                                companyId);
         }
 
         return transactions.stream()

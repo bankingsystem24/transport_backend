@@ -14,9 +14,10 @@ public interface TransportTransactionRepository
                 extends JpaRepository<TransportTransaction, Long> {
 
         // Date only
-        List<TransportTransaction> findByDiDateBetween(
+        List<TransportTransaction> findByDiDateBetweenAndCompany_Id(
                         LocalDate fromDate,
-                        LocalDate toDate);
+                        LocalDate toDate,
+                        Long companyId);
 
         // Owner only
         List<TransportTransaction> findByDiDateBetweenAndOwner_IdAndCompany_Id(
@@ -26,10 +27,11 @@ public interface TransportTransactionRepository
                         Long companyId);
 
         // Vehicle only
-        List<TransportTransaction> findByDiDateBetweenAndVehicle_Id(
+        List<TransportTransaction> findByDiDateBetweenAndVehicle_IdAndCompany_Id(
                         LocalDate fromDate,
                         LocalDate toDate,
-                        Long vehicleId);
+                        Long vehicleId,
+                        Long companyId);
 
         @Query("""
                             SELECT t
