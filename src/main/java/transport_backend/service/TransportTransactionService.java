@@ -262,6 +262,8 @@ public class TransportTransactionService {
                 transaction.setRemarks(request.getRemarks());
                 transaction.setInvoiceDate(request.getInvoiceDate());
                 transaction.setDriverName(request.getDriverName());
+                transaction.setProfitAmount(request.getProfitAmount());
+                transaction.setProfitRate(request.getProfitRate());
 
                 if (transaction.getId() == null
                                 && request.getCreatedById() != null) {
