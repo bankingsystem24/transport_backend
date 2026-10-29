@@ -90,7 +90,8 @@ public interface TransportTransactionRepository
             t.advance,
             t.otherPay,
             t.tripBalance,
-            t.profitAmount
+            t.profitAmount,
+            t.ton_mt
         )
         FROM TransportTransaction t
         JOIN t.company c
