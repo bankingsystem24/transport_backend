@@ -23,6 +23,7 @@ public class DashboardTransactionResponse {
     private BigDecimal otherPay;
     private BigDecimal tripBalance;
     private BigDecimal profitAmount;
+    private BigDecimal tonMt;
 
     public DashboardTransactionResponse(
             Long companyId,
@@ -41,7 +42,8 @@ public class DashboardTransactionResponse {
             BigDecimal advance,
             BigDecimal otherPay,
             BigDecimal tripBalance,
-            BigDecimal profitAmount) {
+            BigDecimal profitAmount,
+            BigDecimal tonMt) {
 
         this.companyId = companyId;
         this.companyName = companyName;
@@ -60,6 +62,7 @@ public class DashboardTransactionResponse {
         this.otherPay = otherPay;
         this.tripBalance = tripBalance;
         this.profitAmount = profitAmount;
+        this.tonMt = tonMt;
     }
 
     public Long getCompanyId() { return companyId; }
@@ -79,4 +82,5 @@ public class DashboardTransactionResponse {
     public BigDecimal getOtherPay() { return otherPay; }
     public BigDecimal getTripBalance() { return tripBalance; }
     public BigDecimal getProfitAmount() { return profitAmount; }
+    public BigDecimal getTonMt(){ return tonMt;}
 }

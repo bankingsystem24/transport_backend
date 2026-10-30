@@ -91,7 +91,7 @@ public interface TransportTransactionRepository
             t.otherPay,
             t.tripBalance,
             t.profitAmount,
-            t.ton_mt
+            t.tonMt
         )
         FROM TransportTransaction t
         JOIN t.company c
@@ -127,7 +127,8 @@ public interface TransportTransactionRepository
                 t.advance,
                 t.otherPay,
                 t.tripBalance,
-                t.profitAmount
+                t.profitAmount,
+                t.tonMt
         )
         FROM TransportTransaction t
         JOIN t.company c
