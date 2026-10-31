@@ -575,6 +575,7 @@ public class TransportTransactionService {
                 response.setPaymentDate(transaction.getPaymentDate());
                 response.setTripBalance(transaction.getTripBalance());
                 response.setDriverName(transaction.getDriverName());
+                response.setVehicleName((transaction.getVehicleName()));
                 if (transaction.getCreatedBy() != null) {
 
                         response.setCreatedById(
