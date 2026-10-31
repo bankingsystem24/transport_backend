@@ -3,7 +3,6 @@ package transport_backend.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
 public class DashboardTransactionResponse {
 
     private Long companyId;
@@ -24,6 +23,8 @@ public class DashboardTransactionResponse {
     private BigDecimal tripBalance;
     private BigDecimal profitAmount;
     private BigDecimal tonMt;
+
+    
 
     public DashboardTransactionResponse(
             Long companyId,

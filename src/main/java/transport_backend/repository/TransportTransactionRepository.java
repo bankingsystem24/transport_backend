@@ -91,7 +91,10 @@ public interface TransportTransactionRepository
             t.otherPay,
             t.tripBalance,
             t.profitAmount,
-            t.tonMt
+            CASE
+                WHEN p.id = 1 THEN (COALESCE(t.loadingWt, 0) + COALESCE(t.tonMt, 0))
+                ELSE (COALESCE(t.unloadingWt, 0) + COALESCE(t.tonMt, 0))
+            END 
         )
         FROM TransportTransaction t
         JOIN t.company c
@@ -128,7 +131,10 @@ public interface TransportTransactionRepository
                 t.otherPay,
                 t.tripBalance,
                 t.profitAmount,
-                t.tonMt
+                CASE
+                    WHEN p.id = 1 THEN (COALESCE(t.loadingWt, 0) + COALESCE(t.tonMt, 0))
+                    ELSE (COALESCE(t.unloadingWt, 0) + COALESCE(t.tonMt, 0))
+                END 
         )
         FROM TransportTransaction t
         JOIN t.company c
