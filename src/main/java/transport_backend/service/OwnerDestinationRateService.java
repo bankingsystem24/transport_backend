@@ -1,5 +1,6 @@
 package transport_backend.service;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -7,6 +8,7 @@ import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionItem;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
+import transport_backend.dto.OwnerRateResponse;
 import transport_backend.entity.CompanyDestinationRate;
 import transport_backend.entity.CompanyMaster;
 import transport_backend.entity.DestinationMaster;
@@ -490,11 +492,14 @@ public class OwnerDestinationRateService {
         }
 
     @Transactional
-    public int uploadExcel(MultipartFile file, LocalDate wefDate) {
+    public int uploadExcel(MultipartFile file, LocalDate wefDate, Long companyId) {
 
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Excel file is required");
         }
+
+         CompanyMaster company = companyMasterRepository.findById(companyId)
+            .orElseThrow(() -> new IllegalArgumentException("Company not found: " + companyId));
 
         List<OwnerDestinationRate> records = new ArrayList<>();
 
@@ -567,7 +572,7 @@ public class OwnerDestinationRateService {
                     record.setCompanyRate(companyRateValue);
                     record.setOwnerRate(revisedRate);
                     record.setBenefit(benefit);
-
+                    record.setCompany(company);
                     records.add(record);
 
                 } catch (RuntimeException ex) {
@@ -654,6 +659,20 @@ public class OwnerDestinationRateService {
         }
 
         return true;
+        }
+
+        @Transactional(readOnly = true)
+        public Optional<OwnerRateResponse> getOwnerRate(
+                LocalDate date, Long companyId, Long ownerId, Long productId, Long destinationId) {
+
+        return rateRepository
+                .findRate(date, companyId, ownerId, productId, destinationId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .map(rate -> new OwnerRateResponse(
+                        rate.getOwnerRate(),
+                        rate.getCompanyRate(),
+                        rate.getBenefit()));
         }
 
 }

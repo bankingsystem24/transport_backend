@@ -10,6 +10,7 @@ import transport_backend.entity.OwnerDestinationRate;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Pageable;
 
 public interface OwnerDestinationRateRepository
         extends JpaRepository<OwnerDestinationRate, Long> {
@@ -113,4 +114,21 @@ public interface OwnerDestinationRateRepository
             LocalDate fromDate,
             LocalDate toDate
     );
-}
+        @Query("""
+        select r from OwnerDestinationRate r
+        where r.company.id = :companyId
+        and r.owner.id = :ownerId
+        and r.product.id = :productId
+        and r.destination.id = :destinationId
+        and r.fromDate <= :date
+        and r.toDate >= :date
+        order by r.fromDate desc
+        """)
+        List<OwnerDestinationRate> findRate(
+                @Param("date") LocalDate date,
+                @Param("companyId") Long companyId,
+                @Param("ownerId") Long ownerId,
+                @Param("productId") Long productId,
+                @Param("destinationId") Long destinationId,
+                Pageable pageable);
+        }

@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 import transport_backend.dto.OwnerDestinationRateRequest;
 import transport_backend.dto.OwnerDestinationRateResponse;
 import transport_backend.dto.OwnerDestinationRateRevisionRequest;
+import transport_backend.dto.OwnerRateResponse;
 import transport_backend.security.JwtAuthenticationDetails;
 import transport_backend.service.OwnerDestinationRateService;
 
@@ -127,9 +128,13 @@ public class OwnerDestinationRateController {
                 @RequestParam("file") MultipartFile file,
                 @RequestParam("wefDate")
                 @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-                LocalDate wefDate) {
+                LocalDate wefDate,Authentication authentication) {
 
-                int count = rateService.uploadExcel(file, wefDate);
+                JwtAuthenticationDetails details =
+                (JwtAuthenticationDetails) authentication.getDetails();
+                                 Long companyId = details.getCompanyId();
+
+                int count = rateService.uploadExcel(file, wefDate, companyId);
 
                 return ResponseEntity.ok(Map.of(
                         "message", "Owner destination rates uploaded successfully",
@@ -137,6 +142,22 @@ public class OwnerDestinationRateController {
                         "wefDate", wefDate,
                         "toDate", wefDate.plusYears(10)
                 ));
+        }
+
+        @GetMapping("/rate")
+        public ResponseEntity<OwnerRateResponse> getOwnerRate(
+                @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                @RequestParam Long ownerId,
+                @RequestParam Long productId,
+                @RequestParam Long destinationId,
+                Authentication authentication) {
+
+        Long companyId = getCompanyId(authentication);
+
+        return rateService
+                .getOwnerRate(date, companyId, ownerId, productId, destinationId)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
         }
 
 }
